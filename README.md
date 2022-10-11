@@ -1,36 +1,20 @@
 # meural-control
 
-This project provides ability to push content to a Meural display from an external URL.
+This project provides ability to push content to a Meural display from an external URL.  It provides a webserver and services with swagger documented endpoints that can be leveraged to control the meural and push arbitrary content.  The user/pw of the netgear account need to be provided so we can fetch the meural information and control it locally.
 
 It leverages Meural's API which their web-interface and mobile app run on. Documentation can be found <a href="https://documenter.getpostman.com/view/1657302/RVnWjKUL#intro/">here.</a><br>
 
-There is also an http server that runs directly on the Meural device, which is used to post content directly to.
-
-Available calls:<br>
-`/remote/identify/`<br>
-`/remote/get_galleries_json/`<br>
-`/remote/get_gallery_status_json/`<br>
-`/remote/get_frame_items_by_gallery_json/`<br>
-`/remote/get_wifi_connections_json/`<br>
-`/remote/get_backlight/`<br>
-`/remote/control_check/sleep/`<br>
-`/remote/control_check/video/`<br>
-`/remote/control_check/als/`<br>
-`/remote/control_check/system/`<br>
-`/remote/control_command/boot_status/image/`<br>
-`/remote/control_command/set_key/`<br>
-`/remote/control_command/set_backlight/`<br>
-`/remote/control_command/suspend`<br>
-`/remote/control_command/resume`<br>
-`/remote/control_command/set_orientation/`<br>
-`/remote/control_command/change_gallery/`<br>
-`/remote/control_command/change_item/`<br>
-`/remote/control_command/rtc/`<br>
-`/remote/control_command/language/`<br>
-`/remote/control_command/country/`<br>
-`/remote/control_command/als_calibrate/off/`<br>
-`/remote/control_command_post/connect_to_new_wifi/`<br>
-`/remote/control_command_post/connect_to_exist_wifi/`<br>
-`/remote/control_command_post/connect_to_hidden_wifi/`<br>
-`/remote/control_command_post/delete_wifi_connection/`<br>
+There is also an http server that runs directly on the Meural device, which is used to post content directly to.  This project currently uses
 `/remote/postcard/`<br>
+
+### application.properties
+An application.properties file is necessary to be placed into `src/main/java/resources`.  It should contain a few properties:
+
+server.port:[<i>port for this application to run on. Example:8081</i>]<br>
+logbackserver=[<i>Optional IP/port for a logback server to get events.  If not defined, modify `logback.xml` to log to stdout or a file.  Example: 192.168.0.7:5671</i><br>
+meural-api=https://api.meural.com/v0/ <br>
+meural-account=[<i>your netgear acct email<i>]<br>
+meural-password=[<i>your netgear acct password</i>]<br>
+
+### Swagger
+Swagger UI is available at `http://127.0.0.1:8081/swagger-ui/index.html`.  It describes the webservice endpoints and allows usage directly in the browser.
