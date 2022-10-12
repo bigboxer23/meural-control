@@ -39,9 +39,7 @@ public class MeuralController
 			description = "The url could be a remote resource, or it could be a local file.  The resource should have an extension" +
 					" embedded in the link unless it is a PNG file.  The file will be postcarded to the Meural (preview functionality)" +
 					" and will stay on the display for the amount of time configured for the preview functionality.")
-	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_NOT_FOUND + "", description = "Not found"),
-			@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
-			@ApiResponse(responseCode = HttpURLConnection.HTTP_INTERNAL_ERROR + "", description = "Internal Server Error"),
+	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
 			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
 	@Parameters({
 			@Parameter(name = "url",

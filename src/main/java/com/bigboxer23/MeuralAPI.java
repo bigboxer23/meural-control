@@ -68,7 +68,7 @@ public class MeuralAPI
 							.adapter(Token.class)
 							.fromJson(response.body().string()).getToken();
 				}
-				logger.warn("Cannot authenticate " + response.code());
+				logger.warn("authenticate response: " + response.code());
 			}
 		}
 		return token;
