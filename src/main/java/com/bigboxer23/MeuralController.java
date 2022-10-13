@@ -55,10 +55,9 @@ public class MeuralController
 		try
 		{
 			MeuralResponse aResponse = api.changePicture(new URL(url));
-			if ("fail".equalsIgnoreCase(aResponse.getStatus()))
+			if (!aResponse.isSuccessful())
 			{
 				theServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-				return aResponse;
 			}
 			return aResponse;
 		} catch (IOException theE)

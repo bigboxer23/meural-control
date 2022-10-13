@@ -11,4 +11,9 @@ public class MeuralResponse
 
 	@Schema(description = "Gives more specific reason request is successful or fails", required = true, example = "Unsupported file format uploaded")
 	private String response;
+
+	public boolean isSuccessful()
+	{
+		return "pass".equals(getStatus());
+	}
 }

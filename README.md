@@ -5,7 +5,7 @@ This project provides ability to push content to a Meural display from an extern
 It leverages Meural's API which their web-interface and mobile app run on. Documentation can be found <a href="https://documenter.getpostman.com/view/1657302/RVnWjKUL#intro/">here.</a><br>
 
 There is also an http server that runs directly on the Meural device, which is used to post content directly to.  This project currently uses
-`/remote/postcard/`<br>
+`/remote/postcard/` & `/remote/control_check/sleep` commands<br>
 
 ## Content Sources
 Presently google photos is the sole supported content source (other than passing an arbitrary URL to the web server's API endpoint).

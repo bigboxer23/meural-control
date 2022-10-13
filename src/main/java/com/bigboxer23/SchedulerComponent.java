@@ -32,8 +32,12 @@ public class SchedulerComponent
 	 * Every hour get a new source file and display on Meural
 	 */
 	@Scheduled(fixedDelay = 3600000)
-	private void iterateSource()
+	private void iterateSource() throws IOException
 	{
+		if (api.isAsleep().isResponse())
+		{
+			return;
+		}
 		currentSource.nextItem().ifPresent(item -> {
 			try
 			{

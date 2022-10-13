@@ -1,9 +1,6 @@
 package com.bigboxer23;
 
-import com.bigboxer23.data.Device;
-import com.bigboxer23.data.Devices;
-import com.bigboxer23.data.MeuralResponse;
-import com.bigboxer23.data.Token;
+import com.bigboxer23.data.*;
 import com.squareup.moshi.Moshi;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
@@ -151,7 +148,7 @@ public class MeuralAPI
 
 	public MeuralResponse changePicture(File file) throws IOException
 	{
-		String deviceIP = getDeviceIP();
+		logger.info("changing picture " + file.getAbsolutePath());
 		RequestBody requestBody = new MultipartBody.Builder()
 				.setType(MultipartBody.FORM)
 				.addFormDataPart("photo", "1",
@@ -159,14 +156,45 @@ public class MeuralAPI
 				.build();
 		Request request = new Request
 				.Builder()
-				.url("http://" + deviceIP + "/remote/postcard")
+				.url(getDeviceURL() + "/remote/postcard")
 				.post(requestBody)
 				.build();
 		try (Response response = client.newCall(request).execute())
 		{
-			return moshi
+			MeuralResponse aResponse =  moshi
 					.adapter(MeuralResponse.class)
 					.fromJson(response.body().string());
+			if (!aResponse.isSuccessful())
+			{
+				logger.warn("failure to change " + aResponse.getResponse());
+			}
+			return aResponse;
 		}
+	}
+
+	/**
+	 * Is the meural presently asleep?
+	 *
+	 * @return
+	 * @throws IOException
+	 */
+	public MeuralStatusResponse isAsleep() throws IOException
+	{
+		Request request = new Request
+				.Builder()
+				.url(getDeviceURL() + "/remote/control_check/sleep")
+				.get()
+				.build();
+		try (Response response = client.newCall(request).execute())
+		{
+			return moshi
+					.adapter(MeuralStatusResponse.class)
+					.fromJson(response.body().string());
+		}
+	}
+
+	private String getDeviceURL() throws IOException
+	{
+		return "http://" + getDeviceIP();
 	}
 }
