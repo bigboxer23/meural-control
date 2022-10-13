@@ -7,11 +7,8 @@ import lombok.Data;
  * Meural response JSON for returning boolean response
  */
 @Data
-public class MeuralStatusResponse
+public class MeuralStatusResponse extends MeuralResponse
 {
-	@Schema(description = "Was the request a success or failure", required = true, allowableValues = {"pass", "fail"})
-	private String status;
-
 	@Schema(description = "Give status data, true or false", required = true)
 	private boolean response;
 }

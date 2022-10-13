@@ -55,7 +55,7 @@ public class GooglePhotosComponent implements IMeuralImageSource
 
 	private CredentialsProvider credProvider;
 
-	private int currentItem = -1;
+	private int currentItem = 0;
 
 	/**
 	 * Iterate through an album's content and

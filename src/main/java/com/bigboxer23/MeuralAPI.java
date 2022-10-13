@@ -132,7 +132,7 @@ public class MeuralAPI
 		meuralIP = null;
 	}
 
-	public MeuralResponse changePicture(URL url) throws IOException
+	public MeuralStringResponse changePicture(URL url) throws IOException
 	{
 		Path temp = Files.createTempFile("", "." + FilenameUtils.getExtension(url.toString()));
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
@@ -146,7 +146,7 @@ public class MeuralAPI
 		}
 	}
 
-	public MeuralResponse changePicture(File file) throws IOException
+	public MeuralStringResponse changePicture(File file) throws IOException
 	{
 		logger.info("changing picture " + file.getAbsolutePath());
 		RequestBody requestBody = new MultipartBody.Builder()
@@ -161,8 +161,8 @@ public class MeuralAPI
 				.build();
 		try (Response response = client.newCall(request).execute())
 		{
-			MeuralResponse aResponse =  moshi
-					.adapter(MeuralResponse.class)
+			MeuralStringResponse aResponse =  moshi
+					.adapter(MeuralStringResponse.class)
 					.fromJson(response.body().string());
 			if (!aResponse.isSuccessful())
 			{
