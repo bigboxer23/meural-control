@@ -1,4 +1,4 @@
-package com.bigboxer23.data;
+package com.bigboxer23.meural_control.data;
 
 import lombok.Data;
 import lombok.NonNull;

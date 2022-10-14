@@ -1,4 +1,4 @@
-package com.bigboxer23.data;
+package com.bigboxer23.meural_control.data;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;

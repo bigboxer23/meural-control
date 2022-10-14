@@ -1,8 +1,7 @@
-package com.bigboxer23;
+package com.bigboxer23.meural_control;
 
-import com.bigboxer23.data.MeuralResponse;
-import com.bigboxer23.data.MeuralStatusResponse;
-import com.bigboxer23.data.MeuralStringResponse;
+import com.bigboxer23.meural_control.data.MeuralStatusResponse;
+import com.bigboxer23.meural_control.data.MeuralStringResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;

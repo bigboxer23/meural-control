@@ -1,4 +1,4 @@
-package com.bigboxer23;
+package com.bigboxer23.meural_control;
 
 import java.net.URL;
 import java.util.Optional;
