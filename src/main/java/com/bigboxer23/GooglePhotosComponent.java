@@ -107,7 +107,7 @@ public class GooglePhotosComponent implements IMeuralImageSource
 	{
 		if (credProvider == null)
 		{
-			logger.info("Getting google creds");
+			logger.info("Fetching Google creds");
 			InputStream aCredStream = Credentials.class.getResourceAsStream("/credentials.json");
 			GoogleClientSecrets aClientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(aCredStream));
 			GoogleAuthorizationCodeFlow aFlow = new GoogleAuthorizationCodeFlow.Builder(
