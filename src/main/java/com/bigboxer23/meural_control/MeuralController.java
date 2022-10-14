@@ -1,5 +1,7 @@
 package com.bigboxer23.meural_control;
 
+import com.bigboxer23.meural_control.data.Command;
+import com.bigboxer23.meural_control.data.MeuralResponse;
 import com.bigboxer23.meural_control.data.MeuralStatusResponse;
 import com.bigboxer23.meural_control.data.MeuralStringResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,11 +30,33 @@ public class MeuralController
 {
 	private final MeuralAPI api;
 
+	private final SchedulerComponent scheduler;
+
 	private static final Logger logger = LoggerFactory.getLogger(MeuralController.class);
 
-	public MeuralController(MeuralAPI api)
+	public MeuralController(MeuralAPI api, SchedulerComponent scheduler)
 	{
 		this.api = api;
+		this.scheduler = scheduler;
+	}
+
+	private <T extends MeuralResponse> T handleResponse(HttpServletResponse servletResponse, Command<T> command)
+	{
+		try
+		{
+			MeuralResponse response = command.execute();
+			if (!response.isSuccessful())
+			{
+				servletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+			}
+			return (T) response;
+		} catch (IOException theE)
+		{
+			logger.warn("handleResponse", theE);
+			api.reset();
+			servletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+			return (T) new MeuralResponse();
+		}
 	}
 
 	@PostMapping(value = "/changeDisplayedContent",
@@ -50,25 +74,10 @@ public class MeuralController
 					example = "https://res.cloudinary.com/dk-find-out/image/upload/q_80,w_1440,f_auto/DCTM_Penguin_UK_DK_AL316928_wsfijk.jpg"
 			)
 			})
-	public MeuralStringResponse changeDisplayedContent(String url, HttpServletResponse theServletResponse)
+	public MeuralStringResponse changeDisplayedContent(String url, HttpServletResponse servletResponse)
 	{
-
 		logger.warn("change display");
-		try
-		{
-			MeuralStringResponse aResponse = api.changePicture(new URL(url));
-			if (!aResponse.isSuccessful())
-			{
-				theServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-			}
-			return aResponse;
-		} catch (IOException theE)
-		{
-			logger.warn("Error changing picture ", theE);
-			api.reset();
-			theServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-			return null;
-		}
+		return handleResponse(servletResponse, () -> api.changePicture(new URL(url)));
 	}
 
 	@GetMapping(value = "/isAsleep",
@@ -77,32 +86,30 @@ public class MeuralController
 			description = "If the Meural is asleep return true, otherwise false.  \"Response\" field within return value denotes state")
 	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
 			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
-	public MeuralStatusResponse isAsleep(HttpServletResponse theServletResponse)
+	public MeuralStatusResponse isAsleep(HttpServletResponse servletResponse)
 	{
-		try
-		{
-			MeuralStatusResponse aResponse = api.isAsleep();
-			if (!aResponse.isSuccessful())
-			{
-				theServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-			}
-			return aResponse;
-		} catch (IOException theE)
-		{
-			logger.warn("Error changing picture ", theE);
-			api.reset();
-			theServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-			return null;
-		}
+		return handleResponse(servletResponse, api::isAsleep);
 	}
 
-	public void nextPicture()
+	@PostMapping(value = "/nextPicture",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "Go to next piece of artwork",
+			description = "Whatever source is defined in the scheduler, go to the next item from the source")
+	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
+	public MeuralResponse nextPicture(HttpServletResponse servletResponse)
 	{
-		//TODO:
+		return handleResponse(servletResponse, scheduler::nextItem);
 	}
 
-	public void prevPicture()
+	@PostMapping(value = "/prevPicture",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "Go to previous piece of artwork",
+			description = "Whatever source is defined in the scheduler, go to the previous item from the source")
+	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
+	public MeuralResponse prevPicture(HttpServletResponse servletResponse)
 	{
-		//TODO:
+		return handleResponse(servletResponse, scheduler::prevItem);
 	}
 }

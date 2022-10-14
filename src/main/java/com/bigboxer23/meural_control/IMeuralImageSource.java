@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface IMeuralImageSource
 {
 	Optional<URL> nextItem();
+
+	Optional<URL> prevItem();
 }

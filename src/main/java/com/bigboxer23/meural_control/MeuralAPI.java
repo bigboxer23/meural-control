@@ -1,6 +1,5 @@
 package com.bigboxer23.meural_control;
 
-import com.bigboxer23.data.*;
 import com.bigboxer23.meural_control.data.*;
 import com.squareup.moshi.Moshi;
 import okhttp3.*;

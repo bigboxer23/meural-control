@@ -8,7 +8,7 @@ import lombok.Data;
 public class MeuralResponse
 {
 	@Schema(description = "Was the request a success or failure", required = true, allowableValues = {"pass", "fail"})
-	private String status;
+	private String status = "fail";
 
 	@Hidden
 	public boolean isSuccessful()

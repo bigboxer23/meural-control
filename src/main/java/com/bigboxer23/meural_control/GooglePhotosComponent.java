@@ -55,14 +55,27 @@ public class GooglePhotosComponent implements IMeuralImageSource
 
 	private CredentialsProvider credProvider;
 
-	private int currentItem = 0;
+	private int currentItem = -1;
+
+	@Override
+	public Optional<URL> nextItem()
+	{
+		return jumpToItem(1);
+	}
+
+	@Override
+	public Optional<URL> prevItem()
+	{
+		return jumpToItem(-1);
+	}
 
 	/**
 	 * Iterate through an album's content and
 	 */
-	@Override
-	public Optional<URL> nextItem()
+
+	private Optional<URL> jumpToItem(int jump)
 	{
+		currentItem = currentItem + jump;
 		try
 		{
 			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder().setCredentialsProvider(getCredentialProvider()).build();
@@ -75,12 +88,12 @@ public class GooglePhotosComponent implements IMeuralImageSource
 					MediaItem item = items.next();
 					if (ai == currentItem)
 					{
-						currentItem++;
 						logger.warn("returning item " + currentItem + " from album " + albumTitle);
 						return Optional.of(new URL(item.getBaseUrl()));
 					}
 				}
-				currentItem = 0;
+				currentItem = -1;
+				return jumpToItem(1);
 			}
 		} catch (IOException | GeneralSecurityException theE)
 		{
