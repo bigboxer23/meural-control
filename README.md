@@ -53,5 +53,3 @@ Swagger UI is available at `http://127.0.0.1:8081/swagger-ui/index.html`.  It de
 7) Other
    8) Java needs to be available and installed (java 8+)
       9) On raspberry pi run `sudo apt install default-jdk`
-
-Finally, two lines need to be manually added to 
