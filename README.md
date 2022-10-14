@@ -30,6 +30,28 @@ meural-api=https://api.meural.com/v0/ <br>
 meural-account=[<i>your netgear acct email<i>]<br>
 meural-password=[<i>your netgear acct password</i>]<br>
 gPhotos-albumTitle=[<i>Album Name Example: Art</i>]<br>
+host=[hostname/IP where to publish to when `mvn package` is run]
 
 ## Swagger
 Swagger UI is available at `http://127.0.0.1:8081/swagger-ui/index.html`.  It describes the webservice endpoints and allows usage directly in the browser.
+
+## Installation
+1) Run `install.sh`
+   2) This is intended to be installed onto a raspberry pi or some other local server.  `install.sh` will install it to a
+   host of your choosing.  The script needs to have the appropriate host variable set for where installation is desired.
+3) Google photos authentication
+   4) When the app initially launches, it will print a URL to the console which needs to be navigated to and proper authorizations
+   given.  The browser this URL is launched in needs to be on the same machine as the meural-control is installed on.  If that 
+   isn't possible (for headless installations for instance), it is possible to run the OAuth flow on a non-headless server and
+   authenticate, and transfer the generated `tokens/StoredCredentials` to the appropriate directory on the remote headless machine.
+   `install.sh` contains a commented line that does exactly this.
+5) Running on launch of server (assuming raspberry pi)
+   6) Two lines need to be added to the `/etc/rc.local` file before `exit 0`
+      7) ```
+         cd /home/pi/com/bigboxer23/meural-control/1.0
+         nohup java -jar /home/pi/com/bigboxer23/meural-control/1.0/meural-control-1.0.jar &
+7) Other
+   8) Java needs to be available and installed (java 8+)
+      9) On raspberry pi run `sudo apt install default-jdk`
+
+Finally, two lines need to be manually added to 

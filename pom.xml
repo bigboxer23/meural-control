@@ -6,7 +6,7 @@
 
 	<groupId>com.bigboxer23</groupId>
 	<artifactId>meural-control</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0</version>
 
 	<name>meural-control</name>
 	<url>https://github.com/bigboxer23/meural-control</url>
@@ -135,7 +135,19 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<extensions>
+			<!-- Enabling the use of SSH -->
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>2.8</version>
+			</extension>
+		</extensions>
 		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -143,6 +155,69 @@
 					<source>8</source>
 					<target>8</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<id>scp-to-remote</id>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<scp file="${project.basedir}/target/meural-control-1.0.jar"
+								     todir="pi@${host}:/home/pi/com/bigboxer23/meural-control/1.0"
+								     keyfile="${user.home}/.ssh/id_rsa"
+								     passphrase=""
+								     trust="true"/>
+								<sshexec host="${host}"
+								         username="pi"
+								         keyfile="${user.home}/.ssh/id_rsa"
+								         command="sudo pkill -f 'java.*meural-control*'"
+								         trust="true"/>
+								<sshexec host="${host}"
+								         username="pi"
+								         keyfile="${user.home}/.ssh/id_rsa"
+								         command="cd /home/pi/com/bigboxer23/meural-control/1.0/ ;nohup java -jar /home/pi/com/bigboxer23/meural-control/1.0/meural-control-1.0.jar &amp;"
+								         trust="true"/>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>com.jcraft</groupId>
+						<artifactId>jsch</artifactId>
+						<version>0.1.54</version>
+					</dependency>
+					<dependency>
+						<groupId>ant</groupId>
+						<artifactId>ant-jsch</artifactId>
+						<version>1.6.5</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>properties-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>read-project-properties</goal>
+						</goals>
+						<configuration>
+							<files>
+								<file>${basedir}/src/main/resources/application.properties</file>
+							</files>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
