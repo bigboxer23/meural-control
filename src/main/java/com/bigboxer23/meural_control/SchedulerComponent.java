@@ -5,6 +5,7 @@ import com.bigboxer23.meural_control.data.MeuralResponse;
 import com.bigboxer23.meural_control.data.MeuralStatusResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +37,7 @@ public class SchedulerComponent
 	/**
 	 * Every hour get a new source file and display on Meural
 	 */
-	@Scheduled(fixedDelay = 3600000)
+	@Scheduled(cron = "${scheduler-time}")
 	private void iterateSource() throws IOException
 	{
 		doAction(gPhotosAPI::nextItem);
@@ -47,6 +48,7 @@ public class SchedulerComponent
 		MeuralStatusResponse response = api.isAsleep();
 		if (response.isResponse())
 		{
+			logger.info("Meural is asleep, not doing anything");
 			return response;
 		}
 		return command.execute()

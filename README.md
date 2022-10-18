@@ -9,7 +9,8 @@ There is also an http server that runs directly on the Meural device, which is u
 
 ## Content Sources
 Presently google photos is the sole supported content source (other than passing an arbitrary URL to the web server's API endpoint).
-Each of the sources will iterate through its content and display a new item from the source each hour.
+Each of the sources will iterate through its content and display a new item from the source by the period defined
+by `scheduler-time` value set in `application.properties` file
 
 ### Google Photos
 To setup google photos integration, navigate to <a href='https://developers.google.com/photos/library/guides/get-started-java'>here</a>
@@ -30,7 +31,8 @@ meural-api=https://api.meural.com/v0/ <br>
 meural-account=[<i>your netgear acct email</i>]<br>
 meural-password=[<i>your netgear acct password</i>]<br>
 gPhotos-albumTitle=[<i>Album Name Example: Art</i>]<br>
-host=[hostname/IP where to publish to when `mvn package` is run]
+host=[<i>hostname/IP where to publish to when `mvn package` is run</i>]<br>
+scheduler-time=[<i>cron expression for when to switch artwork.  Example for running every two hours: 0 0 0/2 * * ?</i>]
 
 ## Swagger
 Swagger UI is available at `http://127.0.0.1:8081/swagger-ui/index.html`.  It describes the webservice endpoints and allows usage directly in the browser.
