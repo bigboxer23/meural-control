@@ -132,10 +132,12 @@ public class MeuralAPI
 		meuralIP = null;
 	}
 
-	public MeuralStringResponse changePicture(URL url) throws IOException
+	public MeuralStringResponse changePicture(SourceItem item) throws IOException
 	{
-		Path temp = Files.createTempFile("", "." + FilenameUtils.getExtension(url.toString()));
-		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+		String extension = FilenameUtils.getExtension(item.getName() != null ? item.getName()
+				: FilenameUtils.getExtension(item.getUrl().toString()));
+		Path temp = Files.createTempFile("", "." + extension);
+		HttpURLConnection conn = (HttpURLConnection)item.getUrl().openConnection();
 		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB;     rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13 (.NET CLR 3.5.30729)");
 		try (InputStream stream = conn.getInputStream()) {
 			FileUtils.copyInputStreamToFile(stream, temp.toFile());

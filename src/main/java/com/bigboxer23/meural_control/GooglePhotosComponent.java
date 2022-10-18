@@ -1,5 +1,6 @@
 package com.bigboxer23.meural_control;
 
+import com.bigboxer23.meural_control.data.SourceItem;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -58,13 +59,13 @@ public class GooglePhotosComponent implements IMeuralImageSource
 	private int currentItem = -1;
 
 	@Override
-	public Optional<URL> nextItem()
+	public Optional<SourceItem> nextItem()
 	{
 		return jumpToItem(1);
 	}
 
 	@Override
-	public Optional<URL> prevItem()
+	public Optional<SourceItem> prevItem()
 	{
 		return jumpToItem(-1);
 	}
@@ -73,7 +74,7 @@ public class GooglePhotosComponent implements IMeuralImageSource
 	 * Iterate through an album's content and
 	 */
 
-	private Optional<URL> jumpToItem(int jump)
+	private Optional<SourceItem> jumpToItem(int jump)
 	{
 		currentItem = currentItem + jump;
 		try
@@ -89,7 +90,7 @@ public class GooglePhotosComponent implements IMeuralImageSource
 					if (ai == currentItem)
 					{
 						logger.warn("returning item " + currentItem + " from album " + albumTitle);
-						return Optional.of(new URL(item.getBaseUrl()));
+						return Optional.of(new SourceItem(item.getFilename(), new URL(item.getBaseUrl() + "=w10000-h10000")));
 					}
 				}
 				currentItem = -1;

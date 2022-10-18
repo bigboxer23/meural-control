@@ -1,5 +1,7 @@
 package com.bigboxer23.meural_control;
 
+import com.bigboxer23.meural_control.data.SourceItem;
+
 import java.net.URL;
 import java.util.Optional;
 
@@ -8,7 +10,7 @@ import java.util.Optional;
  */
 public interface IMeuralImageSource
 {
-	Optional<URL> nextItem();
+	Optional<SourceItem> nextItem();
 
-	Optional<URL> prevItem();
+	Optional<SourceItem> prevItem();
 }

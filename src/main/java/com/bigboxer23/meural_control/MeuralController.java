@@ -1,9 +1,6 @@
 package com.bigboxer23.meural_control;
 
-import com.bigboxer23.meural_control.data.Command;
-import com.bigboxer23.meural_control.data.MeuralResponse;
-import com.bigboxer23.meural_control.data.MeuralStatusResponse;
-import com.bigboxer23.meural_control.data.MeuralStringResponse;
+import com.bigboxer23.meural_control.data.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -77,7 +74,7 @@ public class MeuralController
 	public MeuralStringResponse changeDisplayedContent(String url, HttpServletResponse servletResponse)
 	{
 		logger.warn("change display");
-		return handleResponse(servletResponse, () -> api.changePicture(new URL(url)));
+		return handleResponse(servletResponse, () -> api.changePicture(new SourceItem(null, new URL(url))));
 	}
 
 	@GetMapping(value = "/isAsleep",
