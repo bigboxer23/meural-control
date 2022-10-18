@@ -6,12 +6,10 @@ import com.bigboxer23.meural_control.data.MeuralStatusResponse;
 import com.bigboxer23.meural_control.data.SourceItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Optional;
 
 /**
@@ -44,7 +42,7 @@ public class SchedulerComponent
 		doAction(gPhotosAPI::nextItem);
 	}
 
-	private MeuralResponse doAction(Command<Optional<URL>> command) throws IOException
+	private MeuralResponse doAction(Command<Optional<SourceItem>> command) throws IOException
 	{
 		MeuralStatusResponse response = api.isAsleep();
 		if (response.isResponse())
