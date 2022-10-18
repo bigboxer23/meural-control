@@ -27,7 +27,7 @@ An application.properties file is necessary to be placed into `src/main/java/res
 server.port:[<i>port for this application to run on. Example:8081</i>]<br>
 logbackserver=[<i>Optional IP/port for a logback server to get events.  If not defined, modify `logback.xml` to log to stdout or a file.  Example: 192.168.0.7:5671</i><br>
 meural-api=https://api.meural.com/v0/ <br>
-meural-account=[<i>your netgear acct email<i>]<br>
+meural-account=[<i>your netgear acct email</i>]<br>
 meural-password=[<i>your netgear acct password</i>]<br>
 gPhotos-albumTitle=[<i>Album Name Example: Art</i>]<br>
 host=[hostname/IP where to publish to when `mvn package` is run]
