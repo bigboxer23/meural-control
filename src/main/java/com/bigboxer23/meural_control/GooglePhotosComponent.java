@@ -1,6 +1,7 @@
 package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.SourceItem;
+import com.bigboxer23.meural_control.util.FilePersistentIndex;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -56,7 +57,7 @@ public class GooglePhotosComponent implements IMeuralImageSource
 
 	private CredentialsProvider credProvider;
 
-	private int currentItem = -1;
+	private FilePersistentIndex currentItem = new FilePersistentIndex("gPhotosIndex");
 
 	@Override
 	public Optional<SourceItem> nextItem()
@@ -76,7 +77,7 @@ public class GooglePhotosComponent implements IMeuralImageSource
 
 	private Optional<SourceItem> jumpToItem(int jump)
 	{
-		currentItem = currentItem + jump;
+		currentItem.set(currentItem.get() + jump);
 		try
 		{
 			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder().setCredentialsProvider(getCredentialProvider()).build();
@@ -87,13 +88,13 @@ public class GooglePhotosComponent implements IMeuralImageSource
 				for (int ai = 0; items.hasNext(); ai++)
 				{
 					MediaItem item = items.next();
-					if (ai == currentItem)
+					if (ai == currentItem.get())
 					{
-						logger.warn("returning item " + currentItem + " from album " + albumTitle);
+						logger.info("returning item " + currentItem.get() + " from album " + albumTitle);
 						return Optional.of(new SourceItem(item.getFilename(), new URL(item.getBaseUrl() + "=w10000-h10000")));
 					}
 				}
-				currentItem = -1;
+				currentItem.reset();
 				return jumpToItem(1);
 			}
 		} catch (IOException | GeneralSecurityException theE)
