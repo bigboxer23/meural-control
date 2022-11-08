@@ -22,13 +22,16 @@ public class SchedulerComponent
 
 	private final GooglePhotosComponent gPhotosAPI;
 
+	private final OpenAIComponent openAIAPI;
+
 	private final MeuralAPI api;
 
-	private final IMeuralImageSource currentSource;
+	private IMeuralImageSource currentSource;
 
-	public SchedulerComponent(GooglePhotosComponent gPhotos, MeuralAPI meuralAPI)
+	public SchedulerComponent(GooglePhotosComponent gPhotos, MeuralAPI meuralAPI, OpenAIComponent openAIComponent)
 	{
 		gPhotosAPI = gPhotos;
+		openAIAPI = openAIComponent;
 		api = meuralAPI;
 		currentSource = gPhotos;
 	}
@@ -39,7 +42,7 @@ public class SchedulerComponent
 	@Scheduled(cron = "${scheduler-time}")
 	private void iterateSource() throws IOException
 	{
-		doAction(gPhotosAPI::nextItem);
+		doAction(currentSource::nextItem);
 	}
 
 	private MeuralResponse doAction(Command<Optional<SourceItem>> command) throws IOException
@@ -64,18 +67,27 @@ public class SchedulerComponent
 				.orElse(new MeuralResponse());
 	}
 
-	public void changeSource()
+	public void changeSource(int sourceOrdinal)
 	{
-		//TODO:
+		switch (sourceOrdinal)
+		{
+			case 0:
+			default:
+				currentSource = gPhotosAPI;
+				break;
+			case 1:
+				currentSource = openAIAPI;
+				break;
+		}
 	}
 
 	public MeuralResponse nextItem() throws IOException
 	{
-		return doAction(gPhotosAPI::nextItem);
+		return doAction(currentSource::nextItem);
 	}
 
 	public MeuralResponse prevItem() throws IOException
 	{
-		return doAction(gPhotosAPI::prevItem);
+		return doAction(currentSource::prevItem);
 	}
 }

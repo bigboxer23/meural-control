@@ -29,12 +29,15 @@ public class MeuralController
 
 	private final SchedulerComponent scheduler;
 
+	private final OpenAIComponent openAIComponent;
+
 	private static final Logger logger = LoggerFactory.getLogger(MeuralController.class);
 
-	public MeuralController(MeuralAPI api, SchedulerComponent scheduler)
+	public MeuralController(MeuralAPI api, SchedulerComponent scheduler, OpenAIComponent openAIComponent)
 	{
 		this.api = api;
 		this.scheduler = scheduler;
+		this.openAIComponent = openAIComponent;
 	}
 
 	private <T extends MeuralResponse> T handleResponse(HttpServletResponse servletResponse, Command<T> command)
@@ -108,5 +111,43 @@ public class MeuralController
 	public MeuralResponse prevPicture(HttpServletResponse servletResponse)
 	{
 		return handleResponse(servletResponse, scheduler::prevItem);
+	}
+
+	@PostMapping(value = "/updateOpenAIPrompt",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "Updates the prompt used to generate the images from OpenAI component",
+			description = "This prompt is sent to OpenAI's generator and an AI creates an image based on this")
+	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
+	@Parameters({
+			@Parameter(name = "prompt",
+					description = "Text prompt for OpenAI to generate an image from",
+					required = true,
+					example = "A blue unicorn jumping over a red fence while carrying a knight on his back in the style of Andy Warhol"
+			)
+	})
+	public MeuralResponse updateOpenAIPrompt(String prompt, HttpServletResponse servletResponse)
+	{
+		openAIComponent.updatePrompt(prompt);
+		return handleResponse(servletResponse, scheduler::nextItem);
+	}
+
+	@PostMapping(value = "/changeSource",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "Changes the source where new images are fetched from",
+			description = "Currently supported sources are from google photos, and from OpenAI Dall-e")
+	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
+	@Parameters({
+			@Parameter(name = "source",
+					description = "ordinal to change backing sources.",
+					required = true,
+					example = "0=Google Photos, 1=OpenAI Dall-e"
+			)
+	})
+	public MeuralResponse changeSource(int source, HttpServletResponse servletResponse)
+	{
+		scheduler.changeSource(source);
+		return handleResponse(servletResponse, scheduler::nextItem);
 	}
 }

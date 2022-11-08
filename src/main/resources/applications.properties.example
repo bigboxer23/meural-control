@@ -1,0 +1,10 @@
+server.port:8081
+logbackserver=192.168.0.xxx:5671
+meural-api=https://api.meural.com/v0/
+meural-account=xxx@gmail.com
+meural-password=xxxxx
+gPhotos-albumTitle=Art
+host=192.168.0.xxx
+scheduler-time=0 0 0/2 * * ?
+openai-key=xxx
+openai-prompt=astronaut cats orbiting around a planet in the style of van gogh

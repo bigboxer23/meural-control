@@ -19,11 +19,17 @@ Once the server starts up, there will be a URL printed to the console logs which
 prompt you to log into your Google account and request the appropriate scopes for the integration.  Once this successfully completes, 
 a token will be stored on the server so log-in is not necessary again (unless the token is revoked manually).
 
-Within the application.properteis file, there is a required property, `gPhotos-albumTitle`, which defines the Google Photos album
+Within the application.properties file, there is a required property, `gPhotos-albumTitle`, which defines the Google Photos album
 to push content from.  
 
+### OpenAi (Dall-E)
+This source allows using OpenAI's dall-e text to image generator to create custom images to display on the frame from a 
+text prompt provided by the application.properties file or by updating the prompt used via rest endpoint.  Note: using 
+this endpoint does require OpenAI credits.
+
 ## application.properties
-An application.properties file is necessary to be placed into `src/main/java/resources`.  It should contain a few properties:
+An application.properties file is necessary to be placed into `src/main/java/resources`.  An example file exists in the 
+directory with the additional .example suffix.  It should contain a few properties:
 
 server.port:[<i>port for this application to run on. Example:8081</i>]<br>
 logbackserver=[<i>Optional IP/port for a logback server to get events.  If not defined, modify `logback.xml` to log to stdout or a file.  Example: 192.168.0.7:5671</i><br>
@@ -32,7 +38,9 @@ meural-account=[<i>your netgear acct email</i>]<br>
 meural-password=[<i>your netgear acct password</i>]<br>
 gPhotos-albumTitle=[<i>Album Name Example: Art</i>]<br>
 host=[<i>hostname/IP where to publish to when `mvn package` is run</i>]<br>
-scheduler-time=[<i>cron expression for when to switch artwork.  Example for running every two hours: 0 0 0/2 * * ?</i>]
+scheduler-time=[<i>cron expression for when to switch artwork.  Example for running every two hours: 0 0 0/2 * * ?</i>]<br>
+openai-key=[<i>your openAI api key here</i>]<br>
+openai-prompt=[<i>A prompt to generate artwork with Example:astronaut cats orbiting around a planet in the style of van gogh</i>]<br>
 
 ## Swagger
 Swagger UI is available at `http://127.0.0.1:8081/swagger-ui/index.html`.  It describes the webservice endpoints and allows usage directly in the browser.
