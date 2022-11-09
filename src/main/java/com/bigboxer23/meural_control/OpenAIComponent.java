@@ -57,17 +57,11 @@ public class OpenAIComponent implements IMeuralImageSource
 
 	private Optional<SourceItem> generateItem()
 	{
+		generateNewPrompt().ifPresent(text -> prompt = text);
 		logger.info("Requesting generated image for prompt: \"" + prompt + "\"");
 		RequestBody body = RequestBody.create(moshi.adapter(OpenAIImageGenerationBody.class)
 				.toJson(new OpenAIImageGenerationBody(prompt, user)), JSON);
-		Request request = new Request
-				.Builder()
-				.url("https://api.openai.com/v1/images/generations")
-				.header("Content-Type", "application/json")
-				.header("Authorization", "Bearer " + apiKey)
-				.post(body)
-				.build();
-		try (Response response = client.newCall(request).execute())
+		try (Response response = client.newCall(getRequest("v1/images/generations", body)).execute())
 		{
 			if (response.isSuccessful())
 			{
@@ -84,5 +78,41 @@ public class OpenAIComponent implements IMeuralImageSource
 			logger.warn("generateItem", e);
 		}
 		return Optional.empty();
+	}
+
+	private Optional<String> generateNewPrompt()
+	{
+		logger.info("Requesting generated prompt: \"" + prompt + "\"");
+		RequestBody body = RequestBody.create(moshi.adapter(OpenAICompletionBody.class)
+				.toJson(new OpenAICompletionBody("generate a random art prompt based on: " + prompt, user)), JSON);
+		try (Response response = client.newCall(getRequest("v1/completions", body)).execute())
+		{
+			if (response.isSuccessful())
+			{
+				OpenAICompletionResponse openAIResponse = moshi
+						.adapter(OpenAICompletionResponse.class)
+						.fromJson(response.body().string());
+				if (openAIResponse != null && openAIResponse.getChoices().length > 0)
+				{
+					logger.info("new prompt generated: \"" + openAIResponse.getChoices()[0].getText() + "\"");
+					return Optional.of(openAIResponse.getChoices()[0].getText());
+				}
+			}
+		} catch (IOException e)
+		{
+			logger.warn("generateNewPrompt", e);
+		}
+		return Optional.empty();
+	}
+
+	private Request getRequest(String url, RequestBody body)
+	{
+		return new Request
+				.Builder()
+				.url("https://api.openai.com/" + url)
+				.header("Content-Type", "application/json")
+				.header("Authorization", "Bearer " + apiKey)
+				.post(body)
+				.build();
 	}
 }

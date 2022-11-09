@@ -8,7 +8,7 @@ import java.util.UUID;
  *
  */
 @Data
-public class OpenAIImageGenerationBody
+public class OpenAIImageGenerationBody extends AbstractOpenAIBody
 {
 	private String prompt;
 
@@ -16,12 +16,9 @@ public class OpenAIImageGenerationBody
 
 	private String size = "1024x1024";
 
-	private String user;
-
 	public OpenAIImageGenerationBody(String prompt, String user)
 	{
+		super(user);
 		this.prompt = prompt;
-		//use our meural account to generate a unique id for OpenAI (https://beta.openai.com/docs/usage-policies/end-user-ids)
-		this.user = UUID.nameUUIDFromBytes(user.getBytes()).toString();
 	}
 }

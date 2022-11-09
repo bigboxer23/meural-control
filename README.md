@@ -24,7 +24,9 @@ to push content from.
 
 ### OpenAi (Dall-E)
 This source allows using OpenAI's dall-e text to image generator to create custom images to display on the frame from a 
-text prompt provided by the application.properties file or by updating the prompt used via rest endpoint.  Note: using 
+text prompt provided by the application.properties file or by updating the prompt used via rest endpoint.  The prompt
+is fed into GPT-3 text completion each new image request, so it slowly morphs over time to something different.  The
+prompts are potentially saved with the file names if a gPhotos album name is defined (openai-save-album).  Note: using 
 this endpoint does require OpenAI credits.
 
 ## application.properties
@@ -40,7 +42,7 @@ gPhotos-albumTitle=[<i>Album Name Example: Art</i>]<br>
 host=[<i>hostname/IP where to publish to when `mvn package` is run</i>]<br>
 scheduler-time=[<i>cron expression for when to switch artwork.  Example for running every two hours: 0 0 0/2 * * ?</i>]<br>
 openai-key=[<i>your openAI api key here</i>]<br>
-openai-prompt=[<i>A prompt to generate artwork with Example:astronaut cats orbiting around a planet in the style of van gogh</i>]<br>
+openai-prompt=[<i>A prompt to start generating artwork with Example:astronaut cats orbiting around a planet in the style of van gogh</i>]<br>
 openai-save-album=[<i>An album in google photos where images which are not sourced from gPhotos directly can be saved.
 Leave blank if no save is desired Example:empty or "Ai Art"</i>]<br>
 
