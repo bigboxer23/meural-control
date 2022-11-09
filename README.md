@@ -41,6 +41,8 @@ host=[<i>hostname/IP where to publish to when `mvn package` is run</i>]<br>
 scheduler-time=[<i>cron expression for when to switch artwork.  Example for running every two hours: 0 0 0/2 * * ?</i>]<br>
 openai-key=[<i>your openAI api key here</i>]<br>
 openai-prompt=[<i>A prompt to generate artwork with Example:astronaut cats orbiting around a planet in the style of van gogh</i>]<br>
+openai-save-album=[<i>An album in google photos where images which are not sourced from gPhotos directly can be saved.
+Leave blank if no save is desired Example:empty or "Ai Art"</i>]<br>
 
 ## Swagger
 Swagger UI is available at `http://127.0.0.1:8081/swagger-ui/index.html`.  It describes the webservice endpoints and allows usage directly in the browser.

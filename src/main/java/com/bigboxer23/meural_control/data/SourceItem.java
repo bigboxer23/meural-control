@@ -2,6 +2,7 @@ package com.bigboxer23.meural_control.data;
 
 import lombok.Data;
 
+import java.io.File;
 import java.net.URL;
 
 /**
@@ -10,13 +11,23 @@ import java.net.URL;
 @Data
 public class SourceItem
 {
-	public SourceItem(String filename, URL url)
+	public SourceItem(String filename, URL url, String albumToSaveTo)
 	{
 		this.url = url;
 		this.name = filename;
+		this.albumToSaveTo = albumToSaveTo;
+	}
+
+	public SourceItem(String filename, URL url)
+	{
+		this(filename, url, null);
 	}
 
 	private URL url;
 
 	private String name;
+
+	private String albumToSaveTo;
+
+	private File tempFile;
 }

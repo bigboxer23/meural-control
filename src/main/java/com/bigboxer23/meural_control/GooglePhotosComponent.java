@@ -13,13 +13,23 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.gax.rpc.ApiException;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.UserCredentials;
 import com.google.common.collect.ImmutableList;
 import com.google.photos.library.v1.PhotosLibraryClient;
 import com.google.photos.library.v1.PhotosLibrarySettings;
 import com.google.photos.library.v1.internal.InternalPhotosLibraryClient;
+import com.google.photos.library.v1.proto.BatchCreateMediaItemsResponse;
+import com.google.photos.library.v1.proto.NewMediaItem;
+import com.google.photos.library.v1.proto.NewMediaItemResult;
+import com.google.photos.library.v1.upload.UploadMediaItemRequest;
+import com.google.photos.library.v1.upload.UploadMediaItemResponse;
+import com.google.photos.library.v1.util.NewMediaItemFactory;
+import com.google.photos.types.proto.Album;
 import com.google.photos.types.proto.MediaItem;
+import com.google.rpc.Code;
+import com.google.rpc.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,11 +38,10 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Component to interface with Google Photos so content can be pushed direct (and live from cloud) to the Meural
@@ -108,14 +117,66 @@ public class GooglePhotosComponent implements IMeuralImageSource
 	{
 		if (albumId == null)
 		{
-			client.listAlbums().iterateAll().forEach(album -> {
-				if (album.getTitle().equals(albumTitle))
-				{
-					albumId = album.getId();
-				}
-			});
+			albumId = findOrCreateAlbumId(albumTitle, false, client);
 		}
 		return albumId;
+	}
+
+	public void uploadItemToAlbum(SourceItem item)
+	{
+		try
+		{
+			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder().setCredentialsProvider(getCredentialProvider()).build();
+			try (PhotosLibraryClient photosLibraryClient = PhotosLibraryClient.initialize(settings);
+			     RandomAccessFile file = new RandomAccessFile(item.getTempFile(), "r"))
+			{
+				UploadMediaItemRequest request = UploadMediaItemRequest.newBuilder()
+						.setMimeType("image/png")
+						.setDataFile(file)
+						.build();
+				UploadMediaItemResponse response = photosLibraryClient.uploadMediaItem(request);
+				if (response.getError().isPresent())
+				{
+					UploadMediaItemResponse.Error error = response.getError().get();
+					logger.warn("uploadUrlToAlbum error", error.getCause());
+					return;
+				}
+				if (!response.getUploadToken().isPresent())
+				{
+					logger.warn("uploadUrlToAlbum no upload token exists");
+					return;
+				}
+				String uploadToken = response.getUploadToken().get();
+				NewMediaItem newMediaItem = NewMediaItemFactory
+						.createNewMediaItem(uploadToken, item.getName(), item.getName());
+				BatchCreateMediaItemsResponse createItemsResponse = photosLibraryClient
+						.batchCreateMediaItems(findOrCreateAlbumId(item.getAlbumToSaveTo(), true, photosLibraryClient),
+								Collections.singletonList(newMediaItem));
+				for (NewMediaItemResult itemsResponse : createItemsResponse.getNewMediaItemResultsList()) {
+					Status status = itemsResponse.getStatus();
+					if (status.getCode() != Code.OK_VALUE)
+					{
+						logger.warn("error creating media item: " + status.getCode() + " " + status.getMessage());
+					}
+				}
+			}
+		} catch (IOException | GeneralSecurityException | ApiException theE)
+		{
+			logger.warn("uploadUrlToAlbum:", theE);
+		}
+	}
+
+	private String findOrCreateAlbumId(String albumTitle, boolean excludeNonAppCreatedAlbum, PhotosLibraryClient client)
+	{
+		for (Album album : client.listAlbums(excludeNonAppCreatedAlbum).iterateAll())
+		{
+			if (albumTitle.equalsIgnoreCase(album.getTitle()))
+			{
+				return album.getId();
+			}
+		}
+		Album createdAlbum = client.createAlbum(albumTitle);
+		return createdAlbum.getId();
 	}
 
 	private CredentialsProvider getCredentialProvider() throws IOException, GeneralSecurityException

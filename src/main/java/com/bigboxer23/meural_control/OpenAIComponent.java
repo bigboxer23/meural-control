@@ -31,6 +31,9 @@ public class OpenAIComponent implements IMeuralImageSource
 	@Value("${meural-account}")
 	private String user;
 
+	@Value("${openai-save-album}")
+	private String albumToSaveTo;
+
 	private final OkHttpClient client = new OkHttpClient();
 
 	private final Moshi moshi = new Moshi.Builder().build();
@@ -73,7 +76,7 @@ public class OpenAIComponent implements IMeuralImageSource
 						.fromJson(response.body().string());
 				if (openAIResponse.getData().length > 0)
 				{
-					return Optional.of(new SourceItem(prompt + ".png", new URL(openAIResponse.getData()[0].getUrl())));
+					return Optional.of(new SourceItem(prompt + ".png", new URL(openAIResponse.getData()[0].getUrl()), albumToSaveTo));
 				}
 			}
 		} catch (IOException e)

@@ -43,6 +43,13 @@ public class MeuralAPI
 
 	private String meuralIP;
 
+	private GooglePhotosComponent gPhotos;
+
+	public MeuralAPI(GooglePhotosComponent gPhotos)
+	{
+		this.gPhotos = gPhotos;
+	}
+
 	private String getToken() throws IOException
 	{
 		if (token == null)
@@ -141,6 +148,11 @@ public class MeuralAPI
 		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB;     rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13 (.NET CLR 3.5.30729)");
 		try (InputStream stream = conn.getInputStream()) {
 			FileUtils.copyInputStreamToFile(stream, temp.toFile());
+			if (item.getAlbumToSaveTo() != null && item.getAlbumToSaveTo().length() > 0)
+			{
+				item.setTempFile(temp.toFile());
+				gPhotos.uploadItemToAlbum(item);
+			}
 			return changePicture(temp.toFile());
 		} finally
 		{

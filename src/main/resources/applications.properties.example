@@ -8,3 +8,4 @@ host=192.168.0.xxx
 scheduler-time=0 0 0/2 * * ?
 openai-key=xxx
 openai-prompt=astronaut cats orbiting around a planet in the style of van gogh
+openai-save-album=AI Art
