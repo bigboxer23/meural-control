@@ -24,15 +24,15 @@ public class SchedulerComponent
 
 	private final OpenAIComponent openAIAPI;
 
-	private final MeuralAPI api;
+	private final MeuralComponent api;
 
 	private IMeuralImageSource currentSource;
 
-	public SchedulerComponent(GooglePhotosComponent gPhotos, MeuralAPI meuralAPI, OpenAIComponent openAIComponent)
+	public SchedulerComponent(GooglePhotosComponent gPhotos, MeuralComponent meuralComponent, OpenAIComponent openAIComponent)
 	{
 		gPhotosAPI = gPhotos;
 		openAIAPI = openAIComponent;
-		api = meuralAPI;
+		api = meuralComponent;
 		currentSource = gPhotos;
 	}
 

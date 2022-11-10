@@ -14,7 +14,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -22,9 +21,9 @@ import java.nio.file.Path;
  *
  */
 @Component
-public class MeuralAPI
+public class MeuralComponent
 {
-	private static final Logger logger = LoggerFactory.getLogger(MeuralAPI.class);
+	private static final Logger logger = LoggerFactory.getLogger(MeuralComponent.class);
 
 	private final OkHttpClient client = new OkHttpClient();
 
@@ -45,7 +44,7 @@ public class MeuralAPI
 
 	private GooglePhotosComponent gPhotos;
 
-	public MeuralAPI(GooglePhotosComponent gPhotos)
+	public MeuralComponent(GooglePhotosComponent gPhotos)
 	{
 		this.gPhotos = gPhotos;
 	}
@@ -194,15 +193,30 @@ public class MeuralAPI
 	 */
 	public MeuralStatusResponse isAsleep() throws IOException
 	{
+		return doRequest("/remote/control_check/sleep", MeuralStatusResponse.class);
+	}
+
+	public MeuralStringResponse wakeup() throws IOException
+	{
+		return doRequest("/remote/control_command/resume", MeuralStringResponse.class);
+	}
+
+	public MeuralStringResponse sleep() throws IOException
+	{
+		return doRequest("/remote/control_command/suspend", MeuralStringResponse.class);
+	}
+
+	private <T extends MeuralResponse> T doRequest(String command, Class<T> theResult) throws IOException
+	{
 		Request request = new Request
 				.Builder()
-				.url(getDeviceURL() + "/remote/control_check/sleep")
+				.url(getDeviceURL() + command)
 				.get()
 				.build();
 		try (Response response = client.newCall(request).execute())
 		{
 			return moshi
-					.adapter(MeuralStatusResponse.class)
+					.adapter(theResult)
 					.fromJson(response.body().string());
 		}
 	}

@@ -25,7 +25,7 @@ import java.net.URL;
 @RestController
 public class MeuralController
 {
-	private final MeuralAPI api;
+	private final MeuralComponent api;
 
 	private final SchedulerComponent scheduler;
 
@@ -33,7 +33,7 @@ public class MeuralController
 
 	private static final Logger logger = LoggerFactory.getLogger(MeuralController.class);
 
-	public MeuralController(MeuralAPI api, SchedulerComponent scheduler, OpenAIComponent openAIComponent)
+	public MeuralController(MeuralComponent api, SchedulerComponent scheduler, OpenAIComponent openAIComponent)
 	{
 		this.api = api;
 		this.scheduler = scheduler;
@@ -89,6 +89,28 @@ public class MeuralController
 	public MeuralStatusResponse isAsleep(HttpServletResponse servletResponse)
 	{
 		return handleResponse(servletResponse, api::isAsleep);
+	}
+
+	@PostMapping(value = "/sleep",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "Put the meural to sleep if it's awake",
+			description = "If the Meural is awake, will put it to sleep.")
+	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
+	public MeuralStringResponse sleep(HttpServletResponse servletResponse)
+	{
+		return handleResponse(servletResponse, api::sleep);
+	}
+
+	@PostMapping(value = "/wakeup",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "Wake the Meural if it's asleep",
+			description = "If the Meural is sleeping, this will turn it on.")
+	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
+	public MeuralStringResponse wakeup(HttpServletResponse servletResponse)
+	{
+		return handleResponse(servletResponse, api::wakeup);
 	}
 
 	@PostMapping(value = "/nextPicture",
