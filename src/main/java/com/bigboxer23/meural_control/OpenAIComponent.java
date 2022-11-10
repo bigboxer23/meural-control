@@ -3,13 +3,17 @@ package com.bigboxer23.meural_control;
 import com.bigboxer23.meural_control.data.*;
 import com.squareup.moshi.Moshi;
 import okhttp3.*;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Optional;
 
 /**
@@ -25,7 +29,6 @@ public class OpenAIComponent implements IMeuralImageSource
 	@Value("${openai-key}")
 	private String apiKey;
 
-	@Value("${openai-prompt}")
 	private String prompt;
 
 	@Value("${meural-account}")
@@ -34,9 +37,26 @@ public class OpenAIComponent implements IMeuralImageSource
 	@Value("${openai-save-album}")
 	private String albumToSaveTo;
 
+	private File lastPrompt = new File(System.getProperty("user.dir") + File.separator + "openAIPrompt");
+
 	private final OkHttpClient client = new OkHttpClient();
 
 	private final Moshi moshi = new Moshi.Builder().build();
+
+	public OpenAIComponent(Environment env)
+	{
+		prompt = env.getProperty("openai-prompt");//Do here instead of via annotation, so we can control ordering
+		if (lastPrompt.exists())
+		{
+			try
+			{
+				prompt = FileUtils.readFileToString(lastPrompt, Charset.defaultCharset());
+			} catch (IOException e)
+			{
+				logger.warn("error reading prompt", e);
+			}
+		}
+	}
 
 	@Override
 	public Optional<SourceItem> nextItem()
@@ -53,11 +73,18 @@ public class OpenAIComponent implements IMeuralImageSource
 	public void updatePrompt(String newPrompt)
 	{
 		prompt = newPrompt;
+		try
+		{
+			FileUtils.writeStringToFile(lastPrompt, prompt, Charset.defaultCharset(), false);
+		} catch (IOException e)
+		{
+			logger.warn("error writing prompt", e);
+		}
 	}
 
 	private Optional<SourceItem> generateItem()
 	{
-		generateNewPrompt().ifPresent(text -> prompt = text);
+		generateNewPrompt().ifPresent(this::updatePrompt);
 		logger.info("Requesting generated image for prompt: \"" + prompt + "\"");
 		RequestBody body = RequestBody.create(moshi.adapter(OpenAIImageGenerationBody.class)
 				.toJson(new OpenAIImageGenerationBody(prompt, user)), JSON);
