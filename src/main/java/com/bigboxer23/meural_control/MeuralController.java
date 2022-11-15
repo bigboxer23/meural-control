@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,8 @@ import java.net.URL;
  *
  */
 @RestController
+@Tag(name = "Meural Control Service", description = "Various APIs available for interacting with the meural and setting" +
+		" content sources to use.")
 public class MeuralController
 {
 	private final MeuralComponent api;
