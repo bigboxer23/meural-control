@@ -13,6 +13,8 @@ public class OpenAICompletionBody extends AbstractOpenAIBody
 	private int max_tokens = 25;
 	private double temperature = 0.99;
 
+	private double frequency_penalty = 1;
+
 	public OpenAICompletionBody(String prompt, String user)
 	{
 		super(user);

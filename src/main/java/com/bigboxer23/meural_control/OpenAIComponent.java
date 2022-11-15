@@ -84,7 +84,7 @@ public class OpenAIComponent implements IMeuralImageSource
 
 	private Optional<SourceItem> generateItem()
 	{
-		generateNewPrompt().ifPresent(this::updatePrompt);
+		generateNewPrompt(true).ifPresent(this::updatePrompt);
 		logger.info("Requesting generated image for prompt: \"" + prompt + "\"");
 		RequestBody body = RequestBody.create(moshi.adapter(OpenAIImageGenerationBody.class)
 				.toJson(new OpenAIImageGenerationBody(prompt, user)), JSON);
@@ -107,7 +107,7 @@ public class OpenAIComponent implements IMeuralImageSource
 		return Optional.empty();
 	}
 
-	private Optional<String> generateNewPrompt()
+	private Optional<String> generateNewPrompt(boolean shouldRetry)
 	{
 		logger.info("Requesting generated prompt: \"" + prompt + "\"");
 		RequestBody body = RequestBody.create(moshi.adapter(OpenAICompletionBody.class)
@@ -119,7 +119,9 @@ public class OpenAIComponent implements IMeuralImageSource
 				OpenAICompletionResponse openAIResponse = moshi
 						.adapter(OpenAICompletionResponse.class)
 						.fromJson(response.body().string());
-				if (openAIResponse != null && openAIResponse.getChoices().length > 0)
+				if (openAIResponse != null
+						&& openAIResponse.getChoices().length > 0
+						&& openAIResponse.getChoices()[0].getText().length() > 0)
 				{
 					logger.info("new prompt generated: \"" + openAIResponse.getChoices()[0].getText() + "\"");
 					return Optional.of(openAIResponse.getChoices()[0].getText());
@@ -129,6 +131,11 @@ public class OpenAIComponent implements IMeuralImageSource
 		{
 			logger.warn("generateNewPrompt", e);
 		}
+		if (shouldRetry)
+		{
+			return generateNewPrompt(false);//if we fail to get a suggestion, try once more
+		}
+		logger.warn("generated empty suggestion");
 		return Optional.empty();
 	}
 
