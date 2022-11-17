@@ -43,7 +43,9 @@ public class OpenAIComponent implements IMeuralImageSource
 
 	private final Moshi moshi = new Moshi.Builder().build();
 
-	public OpenAIComponent(Environment env)
+	private GoogleCalendarComponent gCalendarComponent;
+
+	public OpenAIComponent(Environment env, GoogleCalendarComponent gCalendarComp)
 	{
 		prompt = env.getProperty("openai-prompt");//Do here instead of via annotation, so we can control ordering
 		if (lastPrompt.exists())
@@ -56,6 +58,7 @@ public class OpenAIComponent implements IMeuralImageSource
 				logger.warn("error reading prompt", e);
 			}
 		}
+		gCalendarComponent = gCalendarComp;
 	}
 
 	@Override
@@ -85,9 +88,9 @@ public class OpenAIComponent implements IMeuralImageSource
 	private Optional<SourceItem> generateItem()
 	{
 		generateNewPrompt(true).ifPresent(this::updatePrompt);
-		logger.info("Requesting generated image for prompt: \"" + prompt + "\"");
+		logger.info("Requesting generated image for prompt: \"" + prompt + gCalendarComponent.getHolidayString() + "\"");
 		RequestBody body = RequestBody.create(moshi.adapter(OpenAIImageGenerationBody.class)
-				.toJson(new OpenAIImageGenerationBody(prompt, user)), JSON);
+				.toJson(new OpenAIImageGenerationBody(prompt + gCalendarComponent.getHolidayString(), user)), JSON);
 		try (Response response = client.newCall(getRequest("v1/images/generations", body)).execute())
 		{
 			if (response.isSuccessful())
@@ -97,7 +100,7 @@ public class OpenAIComponent implements IMeuralImageSource
 						.fromJson(response.body().string());
 				if (openAIResponse.getData().length > 0)
 				{
-					return Optional.of(new SourceItem(prompt + ".png", new URL(openAIResponse.getData()[0].getUrl()), albumToSaveTo));
+					return Optional.of(new SourceItem(prompt + gCalendarComponent.getHolidayString() + ".png", new URL(openAIResponse.getData()[0].getUrl()), albumToSaveTo));
 				}
 			}
 		} catch (IOException e)

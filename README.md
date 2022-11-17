@@ -29,6 +29,9 @@ is fed into GPT-3 text completion each new image request, so it slowly morphs ov
 prompts are potentially saved with the file names if a gPhotos album name is defined (openai-save-album).  Note: using 
 this endpoint does require OpenAI credits.
 
+This endpoint also integrates with Google calendar to retrieve the US Holiday calendar.  It will apply the holiday's name
+for a week prior to holiday to any AI generated prompts so some spicy holiday content will get generated.
+
 ## application.properties
 An application.properties file is necessary to be placed into `src/main/java/resources`.  An example file exists in the 
 directory with the additional .example suffix.  It should contain a few properties:

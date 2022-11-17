@@ -26,9 +26,10 @@ public class SchedulerComponent
 
 	private IMeuralImageSource currentSource;
 
-	private FilePersistentIndex sourceStorage = new FilePersistentIndex("source");
+	private FilePersistentIndex sourceStorage = new FilePersistentIndex("meuralSource");
 
-	public SchedulerComponent(GooglePhotosComponent gPhotos, MeuralComponent meuralComponent, OpenAIComponent openAIComponent)
+	public SchedulerComponent(GooglePhotosComponent gPhotos,
+	                          MeuralComponent meuralComponent, OpenAIComponent openAIComponent)
 	{
 		gPhotosAPI = gPhotos;
 		openAIAPI = openAIComponent;

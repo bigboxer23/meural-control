@@ -2,21 +2,7 @@ package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.SourceItem;
 import com.bigboxer23.meural_control.util.FilePersistentIndex;
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.gax.core.CredentialsProvider;
-import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.rpc.ApiException;
-import com.google.auth.Credentials;
-import com.google.auth.oauth2.UserCredentials;
-import com.google.common.collect.ImmutableList;
 import com.google.photos.library.v1.PhotosLibraryClient;
 import com.google.photos.library.v1.PhotosLibrarySettings;
 import com.google.photos.library.v1.internal.InternalPhotosLibraryClient;
@@ -36,8 +22,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.net.URL;
 import java.security.GeneralSecurityException;
@@ -52,21 +36,19 @@ public class GooglePhotosComponent implements IMeuralImageSource
 {
 	private static final Logger logger = LoggerFactory.getLogger(GooglePhotosComponent.class);
 
-	private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-
-	private static final List<String> REQUIRED_SCOPES =
-			ImmutableList.of(
-					"https://www.googleapis.com/auth/photoslibrary.readonly",
-					"https://www.googleapis.com/auth/photoslibrary.appendonly");
-
 	@Value("${gPhotos-albumTitle}")
 	private String albumTitle;
 
 	private String albumId;
 
-	private CredentialsProvider credProvider;
+	private final GoogleAPICredentialProvider credentialProviderComponent;
 
-	private FilePersistentIndex currentItem = new FilePersistentIndex("gPhotosIndex");
+	private final FilePersistentIndex currentItem = new FilePersistentIndex("gPhotosIndex");
+
+	public GooglePhotosComponent(GoogleAPICredentialProvider credentialComponent)
+	{
+		credentialProviderComponent = credentialComponent;
+	}
 
 	@Override
 	public Optional<SourceItem> nextItem()
@@ -83,13 +65,12 @@ public class GooglePhotosComponent implements IMeuralImageSource
 	/**
 	 * Iterate through an album's content and
 	 */
-
 	private Optional<SourceItem> jumpToItem(int jump)
 	{
 		currentItem.set(currentItem.get() + jump);
 		try
 		{
-			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder().setCredentialsProvider(getCredentialProvider()).build();
+			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder().setCredentialsProvider(credentialProviderComponent.getCredentialProvider()).build();
 			try (PhotosLibraryClient photosLibraryClient = PhotosLibraryClient.initialize(settings))
 			{
 				InternalPhotosLibraryClient.SearchMediaItemsPagedResponse aResults = photosLibraryClient.searchMediaItems(findAlbumId(photosLibraryClient));
@@ -126,7 +107,7 @@ public class GooglePhotosComponent implements IMeuralImageSource
 	{
 		try
 		{
-			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder().setCredentialsProvider(getCredentialProvider()).build();
+			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder().setCredentialsProvider(credentialProviderComponent.getCredentialProvider()).build();
 			try (PhotosLibraryClient photosLibraryClient = PhotosLibraryClient.initialize(settings);
 			     RandomAccessFile file = new RandomAccessFile(item.getTempFile(), "r"))
 			{
@@ -177,28 +158,5 @@ public class GooglePhotosComponent implements IMeuralImageSource
 		}
 		Album createdAlbum = client.createAlbum(albumTitle);
 		return createdAlbum.getId();
-	}
-
-	private CredentialsProvider getCredentialProvider() throws IOException, GeneralSecurityException
-	{
-		if (credProvider == null)
-		{
-			logger.info("Fetching Google creds");
-			InputStream aCredStream = Credentials.class.getResourceAsStream("/credentials.json");
-			GoogleClientSecrets aClientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(aCredStream));
-			GoogleAuthorizationCodeFlow aFlow = new GoogleAuthorizationCodeFlow.Builder(
-					GoogleNetHttpTransport.newTrustedTransport(), JSON_FACTORY, aClientSecrets, REQUIRED_SCOPES)
-					.setDataStoreFactory(new FileDataStoreFactory(new java.io.File("tokens")))
-					.setAccessType("offline")
-					.build();
-			logger.info("Starting local server receiver");
-			Credential credential = new AuthorizationCodeInstalledApp(aFlow, new LocalServerReceiver.Builder().setPort(8890).build()).authorize("user");
-			credProvider = FixedCredentialsProvider.create(UserCredentials.newBuilder()
-					.setClientId(aClientSecrets.getDetails().getClientId())
-					.setClientSecret(aClientSecrets.getDetails().getClientSecret())
-					.setRefreshToken(credential.getRefreshToken())
-					.build());
-		}
-		return credProvider;
 	}
 }

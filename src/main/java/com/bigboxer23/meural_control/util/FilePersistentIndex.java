@@ -29,7 +29,7 @@ public class FilePersistentIndex
 		{
 			logger.warn("FilePersistentIndex", e);
 		} catch (IOException e) {}
-		logger.info("initialized with value " + currentIndex);
+		logger.info(fileName + ": initialized with value " + currentIndex);
 	}
 
 	private void writeToFile()
