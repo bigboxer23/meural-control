@@ -123,8 +123,13 @@ public class OpenAIComponent implements IMeuralImageSource
 						&& openAIResponse.getChoices().length > 0
 						&& openAIResponse.getChoices()[0].getText().length() > 0)
 				{
-					logger.info("new prompt generated: \"" + openAIResponse.getChoices()[0].getText() + "\"");
-					return Optional.of(openAIResponse.getChoices()[0].getText());
+					String text = openAIResponse.getChoices()[0].getText().trim();
+					if (text.split(" ").length < 6)
+					{
+						throw new IOException(text + " is not complex enough, trying again");
+					}
+					logger.info("new prompt generated: \"" + text + "\"");
+					return Optional.of(text);
 				}
 			}
 		} catch (IOException e)

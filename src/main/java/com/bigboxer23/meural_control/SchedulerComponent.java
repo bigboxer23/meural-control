@@ -1,9 +1,7 @@
 package com.bigboxer23.meural_control;
 
-import com.bigboxer23.meural_control.data.Command;
-import com.bigboxer23.meural_control.data.MeuralResponse;
-import com.bigboxer23.meural_control.data.MeuralStatusResponse;
-import com.bigboxer23.meural_control.data.SourceItem;
+import com.bigboxer23.meural_control.data.*;
+import com.bigboxer23.meural_control.util.FilePersistentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,12 +26,14 @@ public class SchedulerComponent
 
 	private IMeuralImageSource currentSource;
 
+	private FilePersistentIndex sourceStorage = new FilePersistentIndex("source");
+
 	public SchedulerComponent(GooglePhotosComponent gPhotos, MeuralComponent meuralComponent, OpenAIComponent openAIComponent)
 	{
 		gPhotosAPI = gPhotos;
 		openAIAPI = openAIComponent;
 		api = meuralComponent;
-		currentSource = gPhotos;
+		changeSource(sourceStorage.get());
 	}
 
 	/**
@@ -79,6 +79,15 @@ public class SchedulerComponent
 				currentSource = openAIAPI;
 				break;
 		}
+		sourceStorage.set(sourceOrdinal);
+	}
+
+	public MeuralStringResponse getSource()
+	{
+		MeuralStringResponse response = new MeuralStringResponse();
+		response.setStatus("pass");
+		response.setResponse(sourceStorage.get() + "");
+		return response;
 	}
 
 	public MeuralResponse nextItem() throws IOException
