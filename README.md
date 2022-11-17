@@ -1,16 +1,19 @@
 # meural-control
 
-This project provides ability to push content to a Meural display from an external URL.  It provides a webserver and services with swagger documented endpoints that can be leveraged to control the meural and push arbitrary content.  The user/pw of the netgear account need to be provided so we can fetch the meural information and control it locally.
+This project provides ability to push content to a Meural display from content sources not supported by the official software.
+Supported sources include <b>OpenAI (Dall-e)</b>, a <b>Google Photos Album</b>, or an <b>external URL</b>.  It provides a webserver and services
+with swagger documented endpoints that can be leveraged to control the Meural and push arbitrary content. 
+The user/pw of the netgear account need to be provided so we can fetch the Meural information and control it locally.
 
 It leverages Meural's API which their web-interface and mobile app run on. Documentation can be found <a href="https://documenter.getpostman.com/view/1657302/RVnWjKUL#intro/">here.</a><br>
 
 There is also an http server that runs directly on the Meural device, which is used to post content directly to.  This project currently uses
-`/remote/postcard/` & `/remote/control_check/sleep` commands<br>
+`/remote/postcard/`, `/remote/control_command/resume`, `/remote/control_command/suspend` & `/remote/control_check/sleep` commands<br>
 
 ## Content Sources
-Presently google photos is the sole supported content source (other than passing an arbitrary URL to the web server's API endpoint).
 Each of the sources will iterate through its content and display a new item from the source by the period defined
-by `scheduler-time` value set in `application.properties` file
+by `scheduler-time` value set in `application.properties` (other than passing an arbitrary URL to the web server's
+API endpoint, which displays once).
 
 ### Google Photos
 To setup google photos integration, navigate to <a href='https://developers.google.com/photos/library/guides/get-started-java'>here</a>
@@ -31,6 +34,10 @@ this endpoint does require OpenAI credits.
 
 This endpoint also integrates with Google calendar to retrieve the US Holiday calendar.  It will apply the holiday's name
 for a week prior to holiday to any AI generated prompts so some spicy holiday content will get generated.
+
+### External URL
+`displayContentFromUrl` endpoint allows the application to fetch the content from the provided URL and attempt to display
+it on the Meural.  Currently supported file types are `png`, `jpg`, or `gif`
 
 ## application.properties
 An application.properties file is necessary to be placed into `src/main/java/resources`.  An example file exists in the 
