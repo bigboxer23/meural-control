@@ -48,7 +48,9 @@ public class GoogleCalendarComponent
 					.setSingleEvents(true)
 					.execute()
 					.getItems()
-					.forEach(event -> holidayString = " " + event.getSummary());
+					.stream()
+					.findAny()
+					.ifPresent(event -> holidayString = " " + event.getSummary());
 			logger.info("holiday string:" + holidayString);
 		}
 		catch (GeneralSecurityException | IOException e)
