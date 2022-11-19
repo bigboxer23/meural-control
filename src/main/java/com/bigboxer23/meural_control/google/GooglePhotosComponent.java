@@ -1,5 +1,6 @@
-package com.bigboxer23.meural_control;
+package com.bigboxer23.meural_control.google;
 
+import com.bigboxer23.meural_control.IMeuralImageSource;
 import com.bigboxer23.meural_control.data.SourceItem;
 import com.bigboxer23.meural_control.util.FilePersistentIndex;
 import com.google.api.gax.rpc.ApiException;

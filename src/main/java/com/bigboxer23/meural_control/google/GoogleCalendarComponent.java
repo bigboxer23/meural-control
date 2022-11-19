@@ -1,17 +1,14 @@
-package com.bigboxer23.meural_control;
+package com.bigboxer23.meural_control.google;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 
 /**
@@ -26,23 +23,10 @@ public class GoogleCalendarComponent
 
 	private String holidayString;
 
-	private File holidayFile = new File(System.getProperty("user.dir") + File.separator + "holiday");
-
 	public GoogleCalendarComponent(GoogleAPICredentialProvider credentialComponent)
 	{
 		credentialProviderComponent = credentialComponent;
-		holidayString = "";
-		if (holidayFile.exists())
-		{
-			try
-			{
-				holidayString = FileUtils.readFileToString(holidayFile, Charset.defaultCharset());
-			} catch (IOException e)
-			{
-				logger.warn("error reading prompt", e);
-			}
-		}
-
+		updateHoliday();
 	}
 
 	@Scheduled(cron = "0 0 0 ? * *")//Run every day at 12am
@@ -68,13 +52,6 @@ public class GoogleCalendarComponent
 					.findAny()
 					.ifPresent(event -> holidayString = " " + event.getSummary());
 			logger.info("holiday string:" + holidayString);
-			try
-			{
-				FileUtils.writeStringToFile(holidayFile, holidayString, Charset.defaultCharset(), false);
-			} catch (IOException e)
-			{
-				logger.warn("error writing prompt", e);
-			}
 		}
 		catch (GeneralSecurityException | IOException e)
 		{

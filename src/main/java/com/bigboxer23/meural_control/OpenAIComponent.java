@@ -1,6 +1,7 @@
 package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.*;
+import com.bigboxer23.meural_control.google.GoogleCalendarComponent;
 import com.squareup.moshi.Moshi;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
@@ -75,7 +76,7 @@ public class OpenAIComponent implements IMeuralImageSource
 
 	public void updatePrompt(String newPrompt)
 	{
-		prompt = newPrompt;
+		prompt = newPrompt.trim().replace("\n", " ");
 		try
 		{
 			FileUtils.writeStringToFile(lastPrompt, prompt, Charset.defaultCharset(), false);
