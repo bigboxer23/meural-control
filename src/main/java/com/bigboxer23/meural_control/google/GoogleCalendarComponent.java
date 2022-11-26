@@ -50,7 +50,7 @@ public class GoogleCalendarComponent
 					.getItems()
 					.stream()
 					.findAny()
-					.ifPresent(event -> holidayString = " " + event.getSummary());
+					.ifPresent(event -> holidayString = " with elements of " + event.getSummary());
 			logger.info("holiday string:" + holidayString);
 		}
 		catch (GeneralSecurityException | IOException e)

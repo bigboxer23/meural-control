@@ -46,8 +46,11 @@ public class OpenAIComponent implements IMeuralImageSource
 
 	private GoogleCalendarComponent gCalendarComponent;
 
+	private Environment env;
+
 	public OpenAIComponent(Environment env, GoogleCalendarComponent gCalendarComp)
 	{
+		this.env = env;
 		prompt = env.getProperty("openai-prompt");//Do here instead of via annotation, so we can control ordering
 		if (lastPrompt.exists())
 		{
@@ -103,6 +106,11 @@ public class OpenAIComponent implements IMeuralImageSource
 				{
 					return Optional.of(new SourceItem(prompt + gCalendarComponent.getHolidayString() + ".png", new URL(openAIResponse.getData()[0].getUrl()), albumToSaveTo));
 				}
+			} else
+			{
+				logger.warn("request was not successful for " + prompt + gCalendarComponent.getHolidayString() + ". "
+						+ response.body().string() + " " + response.code());
+				prompt = env.getProperty("openai-prompt");
 			}
 		} catch (IOException e)
 		{
@@ -128,7 +136,7 @@ public class OpenAIComponent implements IMeuralImageSource
 						&& openAIResponse.getChoices()[0].getText().length() > 0)
 				{
 					String text = openAIResponse.getChoices()[0].getText().trim();
-					if (text.split(" ").length < 6)
+					if (prompt.equals(text) && text.split(" ").length < 6)
 					{
 						throw new IOException(text + " is not complex enough, trying again");
 					}
