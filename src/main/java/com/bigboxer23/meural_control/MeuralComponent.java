@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 /**
  *
@@ -39,11 +40,17 @@ public class MeuralComponent
 	@Value("${meural-password}")
 	private String password;
 
+	@Value("${meural-playlist}")
+	private String playlistName;
+
+	@Value("${meural-orientation}")
+	private String meuralOrientation;
+
 	private String token;
 
-	private String meuralIP;
+	private Device meuralDevice;
 
-	private GooglePhotosComponent gPhotos;
+	private final GooglePhotosComponent gPhotos;
 
 	public MeuralComponent(GooglePhotosComponent gPhotos)
 	{
@@ -80,6 +87,11 @@ public class MeuralComponent
 
 	private Device getDevice() throws IOException
 	{
+		if (meuralDevice != null)
+		{
+			return meuralDevice;
+		}
+		logger.warn("fetching device info");
 		Request request = new Request.Builder()
 				.url(apiUrl + "user/devices?count=10&page=1")
 				.addHeader("Authorization", "Token " + getToken())
@@ -102,17 +114,186 @@ public class MeuralComponent
 				logger.warn("cannot get device from body " + body);
 				throw new IOException("cannot get device from body " + body);
 			}
-			return devices.getData()[0];
+			meuralDevice = devices.getData()[0];
+			return meuralDevice;
+		}
+	}
+
+	private MeuralStringResponse addItemToPlaylistAndDisplay(SourceItem sourceItem) throws IOException
+	{
+		logger.info("adding new file to playlist " + sourceItem.getName());
+		MeuralItem item = uploadItemToMeural(sourceItem);
+		MeuralPlaylist playlist = getOrCreatePlaylist();
+		addItemToPlaylist(playlist.getId(), item.getId());
+		deleteItemsFromPlaylist(playlist);
+		addPlaylistToDevice(getDevice().getId(), playlist.getId());
+		MeuralStringResponse response = new MeuralStringResponse();
+		response.setStatus("pass");
+		return response;
+	}
+
+	private void addPlaylistToDevice(String deviceId, String playlistId) throws IOException
+	{
+		logger.info("Adding playlist to Meural " + deviceId + ":" + playlistId);
+		Request request = new Request.Builder()
+				.url(apiUrl + "devices/" + deviceId + "/galleries/" + playlistId)
+				.addHeader("Authorization", "Token " + getToken())
+				.post(RequestBody.create(new byte[0]))
+				.build();
+		try (Response response = client.newCall(request).execute())
+		{
+			if (!response.isSuccessful())
+			{
+				throw new IOException("Cannot add to playlist to device" + response.body().string());
+			}
+		}
+	}
+
+	private void deleteItemsFromPlaylist(MeuralPlaylist playlist) throws IOException
+	{
+		logger.info("deleting items from playlist " + playlist.getId());
+		for (Integer item : playlist.getItemIds())
+		{
+			deleteItem(item);
+		}
+	}
+
+	private void deleteItem(Integer itemId) throws IOException
+	{
+		logger.info("deleting item: " + itemId);
+		Request request = new Request.Builder()
+				.url(apiUrl + "items/" + itemId)
+				.addHeader("Authorization", "Token " + getToken())
+				.delete()
+				.build();
+		try (Response response = client.newCall(request).execute())
+		{
+			if (!response.isSuccessful())
+			{
+				throw new IOException("Cannot add to playlist " + response.body().string());
+			}
+		}
+	}
+
+	private void addItemToPlaylist(String playlistId, String itemId) throws IOException
+	{
+		logger.info("adding item to playlist " + playlistId + ":" + itemId);
+		Request request = new Request.Builder()
+				.url(apiUrl + "galleries/" + playlistId + "/items/" + itemId)
+				.addHeader("Authorization", "Token " + getToken())
+				.post(RequestBody.create(new byte[0]))
+				.build();
+		try (Response response = client.newCall(request).execute())
+		{
+			if (!response.isSuccessful())
+			{
+				throw new IOException("Cannot add to playlist " + response.body().string());
+			}
+		}
+	}
+
+	private MeuralItem uploadItemToMeural(SourceItem sourceItem) throws IOException
+	{
+		logger.info("uploading file to Meural " + sourceItem.getName());
+		RequestBody requestBody = new MultipartBody.Builder()
+				.setType(MultipartBody.FORM)
+				.addFormDataPart("image", sourceItem.getName(),
+						RequestBody.create(sourceItem.getTempFile(), getMediaType(sourceItem.getTempFile())))
+				.build();
+		Request request = new Request.Builder()
+				.url(apiUrl + "items")
+				.addHeader("Authorization", "Token " + getToken())
+				.post(requestBody)
+				.build();
+		try (Response response = client.newCall(request).execute())
+		{
+			String body = response.body().string();
+			MeuralItemResponse itemResponse = moshi
+					.adapter(MeuralItemResponse.class)
+					.fromJson(body);
+			if (itemResponse == null
+					|| itemResponse.getData() == null)
+			{
+				logger.warn("cannot get item from body " + body);
+				throw new IOException("cannot get item from body " + body);
+			}
+			return itemResponse.getData();
+		}
+	}
+
+	private MeuralPlaylist getOrCreatePlaylist() throws IOException
+	{
+		logger.info("get playlist info for " + playlistName);
+		Request request = new Request.Builder()
+				.url(apiUrl + "user/galleries?count=10&page=1")
+				.addHeader("Authorization", "Token " + getToken())
+				.build();
+		try (Response response = client.newCall(request).execute())
+		{
+			String body = response.body().string();
+			MeuralPlaylists meuralPlaylists = moshi
+					.adapter(MeuralPlaylists.class)
+					.fromJson(body);
+			if (meuralPlaylists == null
+					|| meuralPlaylists.getData() == null
+					|| meuralPlaylists.getData().length == 0)
+			{
+				logger.warn("cannot get playlists from body " + body);
+				throw new IOException("cannot get playlists from body " + body);
+			}
+			MeuralPlaylist playlist = Arrays.stream(meuralPlaylists.getData())
+					.filter(theMeuralPlaylist -> playlistName.equalsIgnoreCase(theMeuralPlaylist.getName()))
+					.findAny()
+					.orElseGet(() -> {
+						try
+						{
+							return createPlaylist();
+						} catch (IOException e)
+						{
+							logger.warn("orElseGet", e);
+							return null;
+						}
+					});
+			if (playlist == null)
+			{
+				throw new IOException("cannot get playlist");//Can't throw any exception from orElseGet directly
+			}
+			return playlist;
+		}
+	}
+
+	private MeuralPlaylist createPlaylist() throws IOException
+	{
+		logger.info("Creating playlist for " + playlistName);
+		RequestBody formBody = new FormBody
+				.Builder()
+				.add("name", playlistName)
+				.add("orientation", meuralOrientation)
+				.build();
+		Request request = new Request.Builder()
+				.url(apiUrl + "galleries")
+				.addHeader("Authorization", "Token " + getToken())
+				.post(formBody)
+				.build();
+		try (Response response = client.newCall(request).execute())
+		{
+			String body = response.body().string();
+			MeuralPlaylistResponse playlistResponse = moshi
+					.adapter(MeuralPlaylistResponse.class)
+					.fromJson(body);
+			if (playlistResponse == null
+					|| playlistResponse.getData() == null)
+			{
+				logger.warn("cannot create playlist from body " + body);
+				throw new IOException("cannot create playlist from body " + body);
+			}
+			return playlistResponse.getData();
 		}
 	}
 
 	private String getDeviceIP() throws IOException
 	{
-		if (meuralIP == null)
-		{
-			meuralIP = getDevice().getFrameStatus().getLocalIp();
-		}
-		return meuralIP;
+		return getDevice().getFrameStatus().getLocalIp();
 	}
 
 	private MediaType getMediaType(File file)
@@ -136,7 +317,7 @@ public class MeuralComponent
 	public void reset()
 	{
 		token = null;
-		meuralIP = null;
+		meuralDevice = null;
 	}
 
 	public MeuralStringResponse changePicture(SourceItem item) throws IOException
@@ -153,14 +334,23 @@ public class MeuralComponent
 				item.setTempFile(temp.toFile());
 				gPhotos.uploadItemToAlbum(item);
 			}
-			return changePicture(temp.toFile());
+			return addItemToPlaylistAndDisplay(item);
+			//return changePictureWithPreview(temp.toFile());
 		} finally
 		{
 			temp.toFile().delete();
 		}
 	}
 
-	public MeuralStringResponse changePicture(File file) throws IOException
+	/**
+	 * This is a much quicker solution than using meural services, but previewing doesn't seem to consistently hold
+	 * for my newer meural device
+	 *
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	public MeuralStringResponse changePictureWithPreview(File file) throws IOException
 	{
 		logger.info("changing picture " + file.getAbsolutePath());
 		RequestBody requestBody = new MultipartBody.Builder()
@@ -175,14 +365,14 @@ public class MeuralComponent
 				.build();
 		try (Response response = client.newCall(request).execute())
 		{
-			MeuralStringResponse aResponse =  moshi
+			MeuralStringResponse meuralResponse =  moshi
 					.adapter(MeuralStringResponse.class)
 					.fromJson(response.body().string());
-			if (!aResponse.isSuccessful())
+			if (!meuralResponse.isSuccessful())
 			{
-				logger.warn("failure to change " + aResponse.getResponse());
+				logger.warn("failure to change " + meuralResponse.getResponse());
 			}
-			return aResponse;
+			return meuralResponse;
 		}
 	}
 
