@@ -67,8 +67,8 @@ public class MeuralController
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Change the Meural's display to what's defined by the url.",
 			description = "The url could be a remote resource, or it could be a local file.  The resource should have an extension" +
-					" embedded in the link unless it is a PNG file.  The file will be postcarded to the Meural (preview functionality)" +
-					" and will stay on the display for the amount of time configured for the preview functionality.")
+					" embedded in the link unless it is a PNG file.  The file will be added to a Meural playlist defined by" +
+					" the `meural-playlist` property.")
 	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
 			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
 	@Parameters({
@@ -82,6 +82,29 @@ public class MeuralController
 	{
 		logger.warn("change display to: " + url);
 		return handleResponse(servletResponse, () -> api.changePicture(new SourceItem(null, new URL(url))));
+	}
+
+	@PostMapping(value = "/previewContentFromUrl",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "Use Meural's preview functionality to display to what's defined by the url.",
+			description = "The url could be a remote resource, or it could be a local file.  The resource should have an extension" +
+					" embedded in the link unless it is a PNG file.  The file will be use the Meural device's local postcard endpoint" +
+					" to the Meural (preview functionality) and will stay on the display for the amount of time configured" +
+					" for the preview functionality. This is useful for temporary things like displaying content from a" +
+					" home security camera on detection of movement.")
+	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
+	@Parameters({
+			@Parameter(name = "url",
+					description = "A resource to temporarily display on the Meural",
+					required = true,
+					example = "https://res.cloudinary.com/dk-find-out/image/upload/q_80,w_1440,f_auto/DCTM_Penguin_UK_DK_AL316928_wsfijk.jpg"
+			)
+	})
+	public MeuralStringResponse previewContentFromUrl(String url, HttpServletResponse servletResponse)
+	{
+		logger.warn("previewing: " + url);
+		return handleResponse(servletResponse, () -> api.previewItem(new SourceItem(null, new URL(url))));
 	}
 
 	@GetMapping(value = "/isAsleep",

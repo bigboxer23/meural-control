@@ -320,26 +320,34 @@ public class MeuralComponent
 		meuralDevice = null;
 	}
 
-	public MeuralStringResponse changePicture(SourceItem item) throws IOException
+	private MeuralStringResponse fetchItem(SourceItem item, Command<MeuralStringResponse> command) throws IOException
 	{
-		String extension = FilenameUtils.getExtension(item.getName() != null ? item.getName()
-				: FilenameUtils.getExtension(item.getUrl().toString()));
+		String extension = FilenameUtils.getExtension(item.getName() != null ? item.getName() : item.getUrl().toString());
 		Path temp = Files.createTempFile("", "." + extension);
 		HttpURLConnection conn = (HttpURLConnection)item.getUrl().openConnection();
 		conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-GB;     rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13 (.NET CLR 3.5.30729)");
 		try (InputStream stream = conn.getInputStream()) {
 			FileUtils.copyInputStreamToFile(stream, temp.toFile());
+			item.setTempFile(temp.toFile());
 			if (item.getAlbumToSaveTo() != null && item.getAlbumToSaveTo().length() > 0)
 			{
-				item.setTempFile(temp.toFile());
 				gPhotos.uploadItemToAlbum(item);
 			}
-			return addItemToPlaylistAndDisplay(item);
-			//return changePictureWithPreview(temp.toFile());
+			return command.execute();
 		} finally
 		{
 			temp.toFile().delete();
 		}
+	}
+
+	public MeuralStringResponse previewItem(SourceItem item) throws IOException
+	{
+		return fetchItem(item, () -> changePictureWithPreview(item.getTempFile()));
+	}
+
+	public MeuralStringResponse changePicture(SourceItem item) throws IOException
+	{
+		return fetchItem(item, () -> addItemToPlaylistAndDisplay(item));
 	}
 
 	/**
