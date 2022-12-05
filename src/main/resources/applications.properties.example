@@ -11,3 +11,5 @@ scheduler-time=0 0 0/2 * * ?
 openai-key=xxx
 openai-prompt=astronaut cats orbiting around a planet in the style of van gogh
 openai-save-album=AI Art
+transform-command=convert %s -crop 960x1440+0+0 %s
+transform-preview-commmand=convert %s -crop 960x1440+0+0 %s

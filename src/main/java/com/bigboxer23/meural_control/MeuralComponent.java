@@ -52,9 +52,12 @@ public class MeuralComponent
 
 	private final GooglePhotosComponent gPhotos;
 
-	public MeuralComponent(GooglePhotosComponent gPhotos)
+	private final ImageTransformComponent transformComponent;
+
+	public MeuralComponent(GooglePhotosComponent gPhotos, ImageTransformComponent transform)
 	{
 		this.gPhotos = gPhotos;
+		transformComponent = transform;
 	}
 
 	private String getToken() throws IOException
@@ -194,6 +197,7 @@ public class MeuralComponent
 
 	private MeuralItem uploadItemToMeural(SourceItem sourceItem) throws IOException
 	{
+		sourceItem.setTempFile(transformComponent.transformItem(sourceItem.getTempFile()));
 		logger.info("uploading file to Meural " + sourceItem.getName());
 		RequestBody requestBody = new MultipartBody.Builder()
 				.setType(MultipartBody.FORM)
@@ -360,6 +364,7 @@ public class MeuralComponent
 	 */
 	public MeuralStringResponse changePictureWithPreview(File file) throws IOException
 	{
+		file = transformComponent.transformPreviewItem(file);
 		logger.info("changing picture " + file.getAbsolutePath());
 		RequestBody requestBody = new MultipartBody.Builder()
 				.setType(MultipartBody.FORM)

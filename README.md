@@ -61,6 +61,10 @@ openai-key=[<i>your openAI api key here</i>]<br>
 openai-prompt=[<i>A prompt to start generating artwork with Example:astronaut cats orbiting around a planet in the style of van gogh</i>]<br>
 openai-save-album=[<i>An album in google photos where images which are not sourced from gPhotos directly can be saved.
 Leave blank if no save is desired Example:empty or "Ai Art"</i>]<br>
+transform-command=[<i>Call an external command on an image prior to display. First parameter is the downloaded file,
+ second parameter is where the new file is saved. Leave blank to do nothing. Example:convert %s -crop 960x1440+0+0 %s</i>]
+transform-preview-commmand=[<i>Call an external command on an image prior to preview display. First parameter is the downloaded file,
+second parameter is where the new file is saved. Leave blank to do nothing. Example:convert %s -crop 960x1440+0+0 %s</i>]
 
 ## Swagger
 Swagger UI is available at `http://127.0.0.1:8081/swagger-ui/index.html`. It describes the webservice endpoints and allows usage directly in the browser.
