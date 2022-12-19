@@ -89,6 +89,11 @@
 			<version>1.35.2</version>
 		</dependency>
 		<dependency>
+			<groupId>com.bigboxer23</groupId>
+			<artifactId>utils</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.13.2</version>
