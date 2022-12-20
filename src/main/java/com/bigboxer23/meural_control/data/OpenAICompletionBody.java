@@ -8,9 +8,9 @@ import lombok.Data;
 @Data
 public class OpenAICompletionBody extends AbstractOpenAIBody
 {
-	private String model = "text-davinci-002";
+	private String model = "text-davinci-003";
 	private String prompt;
-	private int max_tokens = 35;
+	private int max_tokens = 45;
 	private double temperature = 0.99;
 
 	private double frequency_penalty = 2;
