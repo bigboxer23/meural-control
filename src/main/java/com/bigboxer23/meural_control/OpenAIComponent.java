@@ -2,6 +2,7 @@ package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GoogleCalendarComponent;
+import com.bigboxer23.utils.FilePersistentIndex;
 import com.squareup.moshi.Moshi;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
@@ -38,7 +39,7 @@ public class OpenAIComponent implements IMeuralImageSource
 	@Value("${openai-save-album}")
 	private String albumToSaveTo;
 
-	private File lastPrompt = new File(System.getProperty("user.dir") + File.separator + "openAIPrompt");
+	private File lastPrompt = new File(System.getProperty("user.dir") + File.separator + FilePersistentIndex.kPrefix + "openAIPrompt");
 
 	private final OkHttpClient client = new OkHttpClient();
 
