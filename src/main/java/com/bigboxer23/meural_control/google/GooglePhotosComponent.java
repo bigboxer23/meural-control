@@ -104,6 +104,13 @@ public class GooglePhotosComponent implements IMeuralImageSource
 		return albumId;
 	}
 
+	public void changeAlbum(String albumTitle)
+	{
+		albumId = null;
+		currentItem.reset();
+		this.albumTitle = albumTitle;
+	}
+
 	public void uploadItemToAlbum(SourceItem item)
 	{
 		try

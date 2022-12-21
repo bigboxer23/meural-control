@@ -1,6 +1,7 @@
 package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.*;
+import com.bigboxer23.meural_control.google.GooglePhotosComponent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -35,13 +36,17 @@ public class MeuralController
 
 	private final OpenAIComponent openAIComponent;
 
+	private final GooglePhotosComponent gPhotosAPI;
+
 	private static final Logger logger = LoggerFactory.getLogger(MeuralController.class);
 
-	public MeuralController(MeuralComponent api, SchedulerComponent scheduler, OpenAIComponent openAIComponent)
+	public MeuralController(MeuralComponent api, SchedulerComponent scheduler, OpenAIComponent openAIComponent,
+	                        GooglePhotosComponent gPhotosAPI)
 	{
 		this.api = api;
 		this.scheduler = scheduler;
 		this.openAIComponent = openAIComponent;
+		this.gPhotosAPI = gPhotosAPI;
 	}
 
 	private <T extends MeuralResponse> T handleResponse(HttpServletResponse servletResponse, Command<T> command)
@@ -179,6 +184,26 @@ public class MeuralController
 	{
 		openAIComponent.updatePrompt(prompt);
 		return handleResponse(servletResponse, scheduler::nextItem);
+	}
+
+	@PostMapping(value = "/changeGooglePhotosAlbum",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "Changes the Google Photos album content is displayed from.",
+			description = "Must be a valid album name.  Additionally the source is changed to Google Photos automatically" +
+					" when this api is called.")
+	@ApiResponses({@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")})
+	@Parameters({
+			@Parameter(name = "albumTitle",
+					description = "title of album in google photos to display from",
+					required = true,
+					example = "AI Art"
+			)
+	})
+	public MeuralResponse changeGooglePhotosAlbum(String albumTitle, HttpServletResponse servletResponse)
+	{
+		gPhotosAPI.changeAlbum(albumTitle);
+		return changeSource(0, servletResponse);
 	}
 
 	@PostMapping(value = "/changeSource",
