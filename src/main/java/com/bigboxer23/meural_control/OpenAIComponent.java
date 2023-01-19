@@ -58,6 +58,7 @@ public class OpenAIComponent implements IMeuralImageSource
 			try
 			{
 				prompt = FileUtils.readFileToString(lastPrompt, Charset.defaultCharset());
+				logger.warn("read prompt: " + prompt);
 			} catch (IOException e)
 			{
 				logger.warn("error reading prompt", e);
