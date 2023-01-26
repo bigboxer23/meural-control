@@ -4,8 +4,6 @@ import lombok.Data;
 import lombok.NonNull;
 
 @Data
-public class FrameStatus
-{
-	@NonNull
-	private String localIp;
+public class FrameStatus {
+	@NonNull private String localIp;
 }

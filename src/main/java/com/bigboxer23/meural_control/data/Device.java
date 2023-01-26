@@ -4,13 +4,10 @@ import lombok.Data;
 import lombok.NonNull;
 
 @Data
-public class Device
-{
+public class Device {
 	private String alias;
 
-	@NonNull
-	private String id;
+	@NonNull private String id;
 
-	@NonNull
-	private FrameStatus frameStatus;
+	@NonNull private FrameStatus frameStatus;
 }

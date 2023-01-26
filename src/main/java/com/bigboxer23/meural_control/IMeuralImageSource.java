@@ -1,15 +1,10 @@
 package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.SourceItem;
-
-import java.net.URL;
 import java.util.Optional;
 
-/**
- * Interface to define sources of content for the Meural
- */
-public interface IMeuralImageSource
-{
+/** Interface to define sources of content for the Meural */
+public interface IMeuralImageSource {
 	Optional<SourceItem> nextItem();
 
 	Optional<SourceItem> prevItem();
