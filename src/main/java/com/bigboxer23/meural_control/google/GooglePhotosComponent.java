@@ -22,6 +22,7 @@ import java.io.RandomAccessFile;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.*;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -121,8 +122,8 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 					return;
 				}
 				String uploadToken = response.getUploadToken().get();
-				NewMediaItem newMediaItem =
-						NewMediaItemFactory.createNewMediaItem(uploadToken, item.getName(), item.getName());
+				NewMediaItem newMediaItem = NewMediaItemFactory.createNewMediaItem(
+						uploadToken, StringUtils.truncate(item.getName(), 254), item.getName());
 				BatchCreateMediaItemsResponse createItemsResponse = photosLibraryClient.batchCreateMediaItems(
 						findOrCreateAlbumId(item.getAlbumToSaveTo(), true, photosLibraryClient),
 						Collections.singletonList(newMediaItem));
