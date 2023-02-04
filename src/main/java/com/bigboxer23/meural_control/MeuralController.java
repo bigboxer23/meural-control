@@ -196,6 +196,23 @@ public class MeuralController {
 		return handleResponse(servletResponse, scheduler::nextItem);
 	}
 
+	@GetMapping(value = "/getOpenAIPrompt", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(
+			summary = "Gets the prompt used to generate the images from OpenAI component",
+			description = "This prompt was last sent to OpenAI's Dall-e for image creation.")
+	@ApiResponses({
+		@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
+	})
+	public MeuralStringResponse getOpenAIPrompt(HttpServletResponse servletResponse) {
+		return handleResponse(servletResponse, () -> {
+			MeuralStringResponse response = new MeuralStringResponse();
+			response.setStatus("pass");
+			response.setResponse(openAIComponent.getPrompt().orElse(""));
+			return response;
+		});
+	}
+
 	@PostMapping(value = "/changeGooglePhotosAlbum", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(
 			summary = "Changes the Google Photos album content is displayed from.",

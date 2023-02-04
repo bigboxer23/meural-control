@@ -35,16 +35,16 @@ public class OpenAIComponent implements IMeuralImageSource {
 	@Value("${openai-save-album}")
 	private String albumToSaveTo;
 
-	private File lastPrompt =
+	private final File lastPrompt =
 			new File(System.getProperty("user.dir") + File.separator + FilePersistentIndex.kPrefix + "openAIPrompt");
 
 	private final OkHttpClient client = new OkHttpClient();
 
 	private final Moshi moshi = new Moshi.Builder().build();
 
-	private GoogleCalendarComponent gCalendarComponent;
+	private final GoogleCalendarComponent gCalendarComponent;
 
-	private Environment env;
+	private final Environment env;
 
 	public OpenAIComponent(Environment env, GoogleCalendarComponent gCalendarComp) {
 		this.env = env;
@@ -154,5 +154,9 @@ public class OpenAIComponent implements IMeuralImageSource {
 				.header("Authorization", "Bearer " + apiKey)
 				.post(body)
 				.build();
+	}
+
+	public Optional<String> getPrompt() {
+		return Optional.ofNullable(prompt);
 	}
 }
