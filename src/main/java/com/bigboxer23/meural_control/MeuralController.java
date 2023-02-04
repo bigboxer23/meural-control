@@ -151,6 +151,30 @@ public class MeuralController {
 		return handleResponse(servletResponse, api::wakeup);
 	}
 
+	@PostMapping(value = "/showInfo", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(
+			summary = "Display info about what's currently displayed",
+			description = "Display info about what's currently displayed on the Meural's display")
+	@ApiResponses({
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
+	})
+	public MeuralStringResponse showInfo(HttpServletResponse servletResponse) {
+		return handleResponse(servletResponse, api::up);
+	}
+
+	@PostMapping(value = "/hideInfo", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(
+			summary = "If displaying info no the Meural display, hide it",
+			description = "If displaying info no the Meural display, hide it")
+	@ApiResponses({
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
+	})
+	public MeuralStringResponse hideInfo(HttpServletResponse servletResponse) {
+		return handleResponse(servletResponse, api::down);
+	}
+
 	@PostMapping(value = "/nextPicture", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(
 			summary = "Go to next piece of artwork",

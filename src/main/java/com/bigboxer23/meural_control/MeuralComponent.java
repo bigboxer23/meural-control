@@ -347,6 +347,14 @@ public class MeuralComponent {
 		return doRequest("/remote/control_command/suspend", MeuralStringResponse.class);
 	}
 
+	public MeuralStringResponse up() throws IOException {
+		return doRequest("/remote/control_command/set_key/up", MeuralStringResponse.class);
+	}
+
+	public MeuralStringResponse down() throws IOException {
+		return doRequest("/remote/control_command/set_key/down", MeuralStringResponse.class);
+	}
+
 	private <T extends MeuralResponse> T doRequest(String command, Class<T> theResult) throws IOException {
 		Request request =
 				new Request.Builder().url(getDeviceURL() + command).get().build();
