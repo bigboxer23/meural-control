@@ -12,7 +12,7 @@ preview functionality on the Meural is possible and works, however it seems to i
 even after changing the preview time to be longer than between the scheduler's iteration period. Instead, by default
 we leverage a defined playlist to push content to and display on the Meural. We clean up items so there's only one item
 stored directly in the playlist and on the Meural at any time. This project currently uses ~~`/remote/postcard/`~~,
-`/remote/control_command/set_key/`, `/remote/control_command/resume`, `/remote/control_command/suspend` & 
+`/remote/control_command/set_key/`, `/remote/control_command/resume`, `/remote/control_command/suspend` &
 `/remote/control_check/sleep` commands<br>
 
 ## Content Sources

@@ -273,7 +273,13 @@ public class MeuralComponent {
 
 	private MeuralStringResponse fetchItem(SourceItem item, Command<MeuralStringResponse> command) throws IOException {
 		String extension = FilenameUtils.getExtension(
-				item.getName() != null ? item.getName() : item.getUrl().toString());
+				item.getName() != null
+						? item.getName()
+						: (item.getUrl().toString().contains("?")
+								? item.getUrl()
+										.toString()
+										.substring(0, item.getUrl().toString().lastIndexOf("?"))
+								: item.getUrl().toString()));
 		Path temp = Files.createTempFile("", "." + extension);
 		HttpURLConnection conn = (HttpURLConnection) item.getUrl().openConnection();
 		conn.setRequestProperty(

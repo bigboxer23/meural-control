@@ -156,8 +156,8 @@ public class MeuralController {
 			summary = "Display info about what's currently displayed",
 			description = "Display info about what's currently displayed on the Meural's display")
 	@ApiResponses({
-			@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
-			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
+		@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralStringResponse showInfo(HttpServletResponse servletResponse) {
 		return handleResponse(servletResponse, api::up);
@@ -168,8 +168,8 @@ public class MeuralController {
 			summary = "If displaying info no the Meural display, hide it",
 			description = "If displaying info no the Meural display, hide it")
 	@ApiResponses({
-			@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
-			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
+		@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralStringResponse hideInfo(HttpServletResponse servletResponse) {
 		return handleResponse(servletResponse, api::down);
