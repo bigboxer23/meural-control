@@ -99,7 +99,13 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
+  <repositories>
+    <repository>
+      <id>github</id>
+      <name>GitHub bigboxer23 Maven Packages</name>
+      <url>https://maven.pkg.github.com/bigboxer23/_</url>
+    </repository>
+  </repositories>
   <build>
     <pluginManagement>
       <plugins>
@@ -200,7 +206,7 @@
             <goals>
               <goal>read-project-properties</goal>
             </goals>
-            <phase>initialize</phase>
+            <phase>package</phase>
             <configuration>
               <files>
                 <file>${basedir}/src/main/resources/application.properties</file>
