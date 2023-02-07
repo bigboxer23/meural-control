@@ -48,6 +48,10 @@ public class SchedulerComponent {
 		return command.execute()
 				.map(url -> {
 					try {
+						url.setCleanupTempFile(false);
+						// preview first b/c next, more permanent step takes (10-15s)
+						api.previewItem(url, false);
+						url.setCleanupTempFile(true);
 						return api.changePicture(url);
 					} catch (IOException theE) {
 						logger.warn("doAction", theE);

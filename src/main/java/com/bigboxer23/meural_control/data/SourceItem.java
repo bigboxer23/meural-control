@@ -11,6 +11,7 @@ public class SourceItem {
 		this.url = url;
 		this.name = filename;
 		this.albumToSaveTo = albumToSaveTo;
+		cleanupTempFile = true;
 	}
 
 	public SourceItem(String filename, URL url) {
@@ -24,4 +25,6 @@ public class SourceItem {
 	private String albumToSaveTo;
 
 	private File tempFile;
+
+	private boolean cleanupTempFile;
 }

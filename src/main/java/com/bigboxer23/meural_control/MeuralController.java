@@ -111,7 +111,7 @@ public class MeuralController {
 	})
 	public MeuralStringResponse previewContentFromUrl(String url, HttpServletResponse servletResponse) {
 		logger.warn("previewing: " + url);
-		return handleResponse(servletResponse, () -> api.previewItem(new SourceItem(null, new URL(url))));
+		return handleResponse(servletResponse, () -> api.previewItem(new SourceItem(null, new URL(url)), true));
 	}
 
 	@GetMapping(value = "/isAsleep", produces = MediaType.APPLICATION_JSON_VALUE)

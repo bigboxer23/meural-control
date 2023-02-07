@@ -271,7 +271,22 @@ public class MeuralComponent {
 		meuralDevice = null;
 	}
 
+	private MeuralStringResponse executeAfterFetchCommand(SourceItem item, Command<MeuralStringResponse> command)
+			throws IOException {
+		try {
+			return command.execute();
+		} finally {
+			if (item.isCleanupTempFile()) {
+				item.getTempFile().delete();
+			}
+		}
+	}
+
 	private MeuralStringResponse fetchItem(SourceItem item, Command<MeuralStringResponse> command) throws IOException {
+		// If temp file is set and exists, don't fetch it again.
+		if (item.getTempFile() != null && item.getTempFile().exists()) {
+			return executeAfterFetchCommand(item, command);
+		}
 		String extension = FilenameUtils.getExtension(
 				item.getName() != null
 						? item.getName()
@@ -292,14 +307,12 @@ public class MeuralComponent {
 			if (item.getAlbumToSaveTo() != null && item.getAlbumToSaveTo().length() > 0) {
 				gPhotos.uploadItemToAlbum(item);
 			}
-			return command.execute();
-		} finally {
-			temp.toFile().delete();
+			return executeAfterFetchCommand(item, command);
 		}
 	}
 
-	public MeuralStringResponse previewItem(SourceItem item) throws IOException {
-		return fetchItem(item, () -> changePictureWithPreview(item.getTempFile()));
+	public MeuralStringResponse previewItem(SourceItem item, boolean transform) throws IOException {
+		return fetchItem(item, () -> changePictureWithPreview(item.getTempFile(), transform));
 	}
 
 	public MeuralStringResponse changePicture(SourceItem item) throws IOException {
@@ -314,8 +327,10 @@ public class MeuralComponent {
 	 * @return
 	 * @throws IOException
 	 */
-	public MeuralStringResponse changePictureWithPreview(File file) throws IOException {
-		file = transformComponent.transformPreviewItem(file);
+	public MeuralStringResponse changePictureWithPreview(File file, boolean transform) throws IOException {
+		if (transform) {
+			file = transformComponent.transformPreviewItem(file);
+		}
 		logger.info("changing picture " + file.getAbsolutePath());
 		RequestBody requestBody = new MultipartBody.Builder()
 				.setType(MultipartBody.FORM)
