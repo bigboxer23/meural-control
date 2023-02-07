@@ -1,3 +1,5 @@
+[![CodeQL](https://github.com/bigboxer23/meural-control/actions/workflows/codeql.yml/badge.svg)](https://github.com/bigboxer23/meural-control/actions/workflows/codeql.yml)
+
 # meural-control
 
 This project provides ability to push content to a Meural display from content sources not supported by the official software.
