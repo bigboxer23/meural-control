@@ -90,7 +90,7 @@
     <dependency>
       <groupId>com.bigboxer23</groupId>
       <artifactId>utils</artifactId>
-      <version>2.0.1</version>
+      <version>2.0.4</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -206,7 +206,7 @@
             <goals>
               <goal>read-project-properties</goal>
             </goals>
-            <phase>package</phase>
+            <phase>prepare-package</phase>
             <configuration>
               <files>
                 <file>${basedir}/src/main/resources/application.properties</file>

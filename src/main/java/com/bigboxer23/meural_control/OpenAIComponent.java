@@ -3,6 +3,7 @@ package com.bigboxer23.meural_control;
 import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GoogleCalendarComponent;
 import com.bigboxer23.utils.FilePersistentIndex;
+import com.bigboxer23.utils.http.OkHttpUtil;
 import com.squareup.moshi.Moshi;
 import java.io.File;
 import java.io.IOException;
@@ -37,8 +38,6 @@ public class OpenAIComponent implements IMeuralImageSource {
 
 	private final File lastPrompt =
 			new File(System.getProperty("user.dir") + File.separator + FilePersistentIndex.kPrefix + "openAIPrompt");
-
-	private final OkHttpClient client = new OkHttpClient();
 
 	private final Moshi moshi = new Moshi.Builder().build();
 
@@ -88,8 +87,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 				moshi.adapter(OpenAIImageGenerationBody.class)
 						.toJson(new OpenAIImageGenerationBody(prompt + gCalendarComponent.getHolidayString(), user)),
 				JSON);
-		try (Response response =
-				client.newCall(getRequest("v1/images/generations", body)).execute()) {
+		try (Response response = getRequest("v1/images/generations", body)) {
 			if (response.isSuccessful()) {
 				OpenAIImageGenerationResponse openAIResponse = moshi.adapter(OpenAIImageGenerationResponse.class)
 						.fromJson(response.body().string());
@@ -121,8 +119,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 				moshi.adapter(OpenAICompletionBody.class)
 						.toJson(new OpenAICompletionBody("generate a random art prompt based on: " + prompt, user)),
 				JSON);
-		try (Response response =
-				client.newCall(getRequest("v1/completions", body)).execute()) {
+		try (Response response = getRequest("v1/completions", body)) {
 			if (response.isSuccessful()) {
 				OpenAICompletionResponse openAIResponse = moshi.adapter(OpenAICompletionResponse.class)
 						.fromJson(response.body().string());
@@ -147,13 +144,10 @@ public class OpenAIComponent implements IMeuralImageSource {
 		return Optional.empty();
 	}
 
-	private Request getRequest(String url, RequestBody body) {
-		return new Request.Builder()
-				.url("https://api.openai.com/" + url)
-				.header("Content-Type", "application/json")
-				.header("Authorization", "Bearer " + apiKey)
-				.post(body)
-				.build();
+	private Response getRequest(String url, RequestBody body) throws IOException {
+		return OkHttpUtil.postSynchronous(
+				"https://api.openai.com/" + url, body, builder -> builder.header("Content-Type", "application/json")
+						.header("Authorization", "Bearer " + apiKey));
 	}
 
 	public Optional<String> getPrompt() {

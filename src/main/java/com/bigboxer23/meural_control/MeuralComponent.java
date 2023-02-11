@@ -2,6 +2,8 @@ package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GooglePhotosComponent;
+import com.bigboxer23.utils.http.OkHttpUtil;
+import com.bigboxer23.utils.http.RequestBuilderCallback;
 import com.squareup.moshi.Moshi;
 import java.io.File;
 import java.io.IOException;
@@ -22,8 +24,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class MeuralComponent {
 	private static final Logger logger = LoggerFactory.getLogger(MeuralComponent.class);
-
-	private final OkHttpClient client = new OkHttpClient();
 
 	private final Moshi moshi = new Moshi.Builder().build();
 
@@ -55,26 +55,30 @@ public class MeuralComponent {
 		transformComponent = transform;
 	}
 
-	private String getToken() throws IOException {
+	private String getToken() {
 		if (token == null) {
-			RequestBody formBody = new FormBody.Builder()
-					.add("username", username)
-					.add("password", password)
-					.build();
-			Request request = new Request.Builder()
-					.url(apiUrl + "authenticate")
-					.post(formBody)
-					.build();
-			try (Response response = client.newCall(request).execute()) {
+			try (Response response = OkHttpUtil.postSynchronous(
+					apiUrl + "authenticate",
+					new FormBody.Builder()
+							.add("username", username)
+							.add("password", password)
+							.build(),
+					null)) {
 				if (response.isSuccessful()) {
 					token = moshi.adapter(Token.class)
 							.fromJson(response.body().string())
 							.getToken();
 				}
 				logger.warn("authenticate response: " + response.code());
+			} catch (IOException e) {
+				logger.error("getToken", e);
 			}
 		}
 		return token;
+	}
+
+	private RequestBuilderCallback getAuthCallback() {
+		return builder -> builder.addHeader("Authorization", "Token " + getToken());
 	}
 
 	private Device getDevice() throws IOException {
@@ -82,11 +86,8 @@ public class MeuralComponent {
 			return meuralDevice;
 		}
 		logger.warn("fetching device info");
-		Request request = new Request.Builder()
-				.url(apiUrl + "user/devices?count=10&page=1")
-				.addHeader("Authorization", "Token " + getToken())
-				.build();
-		try (Response response = client.newCall(request).execute()) {
+		try (Response response =
+				OkHttpUtil.getSynchronous(apiUrl + "user/devices?count=10&page=1", getAuthCallback())) {
 			if (!response.isSuccessful()) {
 				logger.warn("Cannot get device " + response.code());
 				throw new IOException("Cannot get device " + response.code());
@@ -116,12 +117,8 @@ public class MeuralComponent {
 
 	private void addPlaylistToDevice(String deviceId, String playlistId) throws IOException {
 		logger.info("Adding playlist to Meural " + deviceId + ":" + playlistId);
-		Request request = new Request.Builder()
-				.url(apiUrl + "devices/" + deviceId + "/galleries/" + playlistId)
-				.addHeader("Authorization", "Token " + getToken())
-				.post(RequestBody.create(new byte[0]))
-				.build();
-		try (Response response = client.newCall(request).execute()) {
+		try (Response response = OkHttpUtil.postSynchronous(
+				apiUrl + "devices/" + deviceId + "/galleries/" + playlistId, null, getAuthCallback())) {
 			if (!response.isSuccessful()) {
 				throw new IOException(
 						"Cannot add to playlist to device" + response.body().string());
@@ -138,12 +135,7 @@ public class MeuralComponent {
 
 	private void deleteItem(Integer itemId) throws IOException {
 		logger.info("deleting item: " + itemId);
-		Request request = new Request.Builder()
-				.url(apiUrl + "items/" + itemId)
-				.addHeader("Authorization", "Token " + getToken())
-				.delete()
-				.build();
-		try (Response response = client.newCall(request).execute()) {
+		try (Response response = OkHttpUtil.deleteSynchronous(apiUrl + "items/" + itemId, getAuthCallback())) {
 			if (!response.isSuccessful()) {
 				throw new IOException(
 						"Cannot add to playlist " + response.body().string());
@@ -153,12 +145,8 @@ public class MeuralComponent {
 
 	private void addItemToPlaylist(String playlistId, String itemId) throws IOException {
 		logger.info("adding item to playlist " + playlistId + ":" + itemId);
-		Request request = new Request.Builder()
-				.url(apiUrl + "galleries/" + playlistId + "/items/" + itemId)
-				.addHeader("Authorization", "Token " + getToken())
-				.post(RequestBody.create(new byte[0]))
-				.build();
-		try (Response response = client.newCall(request).execute()) {
+		try (Response response = OkHttpUtil.postSynchronous(
+				apiUrl + "galleries/" + playlistId + "/items/" + itemId, null, getAuthCallback())) {
 			if (!response.isSuccessful()) {
 				throw new IOException(
 						"Cannot add to playlist " + response.body().string());
@@ -169,19 +157,16 @@ public class MeuralComponent {
 	private MeuralItem uploadItemToMeural(SourceItem sourceItem) throws IOException {
 		sourceItem.setTempFile(transformComponent.transformItem(sourceItem.getTempFile()));
 		logger.info("uploading file to Meural " + sourceItem.getName());
-		RequestBody requestBody = new MultipartBody.Builder()
-				.setType(MultipartBody.FORM)
-				.addFormDataPart(
-						"image",
-						sourceItem.getName(),
-						RequestBody.create(sourceItem.getTempFile(), getMediaType(sourceItem.getTempFile())))
-				.build();
-		Request request = new Request.Builder()
-				.url(apiUrl + "items")
-				.addHeader("Authorization", "Token " + getToken())
-				.post(requestBody)
-				.build();
-		try (Response response = client.newCall(request).execute()) {
+		try (Response response = OkHttpUtil.postSynchronous(
+				apiUrl + "items",
+				new MultipartBody.Builder()
+						.setType(MultipartBody.FORM)
+						.addFormDataPart(
+								"image",
+								sourceItem.getName(),
+								RequestBody.create(sourceItem.getTempFile(), getMediaType(sourceItem.getTempFile())))
+						.build(),
+				getAuthCallback())) {
 			String body = response.body().string();
 			MeuralItemResponse itemResponse =
 					moshi.adapter(MeuralItemResponse.class).fromJson(body);
@@ -195,11 +180,8 @@ public class MeuralComponent {
 
 	private MeuralPlaylist getOrCreatePlaylist() throws IOException {
 		logger.info("get playlist info for " + playlistName);
-		Request request = new Request.Builder()
-				.url(apiUrl + "user/galleries?count=10&page=1")
-				.addHeader("Authorization", "Token " + getToken())
-				.build();
-		try (Response response = client.newCall(request).execute()) {
+		try (Response response =
+				OkHttpUtil.getSynchronous(apiUrl + "user/galleries?count=10&page=1", getAuthCallback())) {
 			String body = response.body().string();
 			MeuralPlaylists meuralPlaylists =
 					moshi.adapter(MeuralPlaylists.class).fromJson(body);
@@ -227,16 +209,13 @@ public class MeuralComponent {
 
 	private MeuralPlaylist createPlaylist() throws IOException {
 		logger.info("Creating playlist for " + playlistName);
-		RequestBody formBody = new FormBody.Builder()
-				.add("name", playlistName)
-				.add("orientation", meuralOrientation)
-				.build();
-		Request request = new Request.Builder()
-				.url(apiUrl + "galleries")
-				.addHeader("Authorization", "Token " + getToken())
-				.post(formBody)
-				.build();
-		try (Response response = client.newCall(request).execute()) {
+		try (Response response = OkHttpUtil.postSynchronous(
+				apiUrl + "galleries",
+				new FormBody.Builder()
+						.add("name", playlistName)
+						.add("orientation", meuralOrientation)
+						.build(),
+				getAuthCallback())) {
 			String body = response.body().string();
 			MeuralPlaylistResponse playlistResponse =
 					moshi.adapter(MeuralPlaylistResponse.class).fromJson(body);
@@ -332,15 +311,13 @@ public class MeuralComponent {
 			file = transformComponent.transformPreviewItem(file);
 		}
 		logger.info("changing picture " + file.getAbsolutePath());
-		RequestBody requestBody = new MultipartBody.Builder()
-				.setType(MultipartBody.FORM)
-				.addFormDataPart("photo", "1", RequestBody.create(file, getMediaType(file)))
-				.build();
-		Request request = new Request.Builder()
-				.url(getDeviceURL() + "/remote/postcard")
-				.post(requestBody)
-				.build();
-		try (Response response = client.newCall(request).execute()) {
+		try (Response response = OkHttpUtil.postSynchronous(
+				getDeviceURL() + "/remote/postcard",
+				new MultipartBody.Builder()
+						.setType(MultipartBody.FORM)
+						.addFormDataPart("photo", "1", RequestBody.create(file, getMediaType(file)))
+						.build(),
+				null)) {
 			MeuralStringResponse meuralResponse = moshi.adapter(MeuralStringResponse.class)
 					.fromJson(response.body().string());
 			if (!meuralResponse.isSuccessful()) {
@@ -377,9 +354,7 @@ public class MeuralComponent {
 	}
 
 	private <T extends MeuralResponse> T doRequest(String command, Class<T> theResult) throws IOException {
-		Request request =
-				new Request.Builder().url(getDeviceURL() + command).get().build();
-		try (Response response = client.newCall(request).execute()) {
+		try (Response response = OkHttpUtil.getSynchronous(getDeviceURL() + command, null)) {
 			return moshi.adapter(theResult).fromJson(response.body().string());
 		}
 	}
