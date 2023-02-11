@@ -206,7 +206,7 @@
             <goals>
               <goal>read-project-properties</goal>
             </goals>
-            <phase>package</phase>
+            <phase>prepare-package</phase>
             <configuration>
               <files>
                 <file>${basedir}/src/main/resources/application.properties</file>
