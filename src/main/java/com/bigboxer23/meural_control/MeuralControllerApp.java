@@ -15,7 +15,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 				@Info(
 						title = "Meural remote control",
 						version = "1",
-						description = "Provides ability to push content to a Meural display from an" + " external URL",
+						description = "Provides ability to push content to a Meural display from an"
+								+ " external source that's unsupported by the Meural app."
+								+ " Currently supported is OpenAI, Google Photos, and external"
+								+ " URLs",
 						contact =
 								@Contact(
 										name = "bigboxer23@gmail.com",
