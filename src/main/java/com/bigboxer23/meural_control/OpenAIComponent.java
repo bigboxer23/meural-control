@@ -98,19 +98,23 @@ public class OpenAIComponent implements IMeuralImageSource {
 							albumToSaveTo));
 				}
 			} else {
-				logger.warn("request was not successful for "
-						+ prompt
-						+ gCalendarComponent.getHolidayString()
-						+ ". "
-						+ response.body().string()
-						+ " "
-						+ response.code());
-				prompt = env.getProperty("openai-prompt");
+				resetPrompt(response.body().string(), response.code());
 			}
 		} catch (IOException e) {
 			logger.warn("generateItem", e);
 		}
 		return Optional.empty();
+	}
+
+	private void resetPrompt(String body, int code) {
+		logger.warn("request was not successful for "
+				+ prompt
+				+ gCalendarComponent.getHolidayString()
+				+ ". "
+				+ body
+				+ " "
+				+ code);
+		prompt = env.getProperty("openai-prompt");
 	}
 
 	private Optional<String> generateNewPrompt(boolean shouldRetry) {
@@ -121,13 +125,16 @@ public class OpenAIComponent implements IMeuralImageSource {
 				JSON);
 		try (Response response = getRequest("v1/completions", body)) {
 			if (response.isSuccessful()) {
-				OpenAICompletionResponse openAIResponse = moshi.adapter(OpenAICompletionResponse.class)
-						.fromJson(response.body().string());
-				if (openAIResponse != null
-						&& openAIResponse.getChoices().length > 0
-						&& openAIResponse.getChoices()[0].getText().length() > 0) {
+				String bodyContent = response.body().string();
+				OpenAICompletionResponse openAIResponse =
+						moshi.adapter(OpenAICompletionResponse.class).fromJson(bodyContent);
+				if (openAIResponse != null && openAIResponse.getChoices().length > 0) {
 					String text = openAIResponse.getChoices()[0].getText().trim();
-					if (prompt.equals(text) && text.split(" ").length < 6) {
+					if (prompt.equals(text) || text.split(" ").length < 6) {
+						if (!shouldRetry && !prompt.equalsIgnoreCase(env.getProperty("openai-prompt"))) {
+							resetPrompt(bodyContent, response.code());
+							shouldRetry = true;
+						}
 						throw new IOException(text + " is not complex enough, trying again");
 					}
 					logger.info("new prompt generated: \"" + text + "\"");
