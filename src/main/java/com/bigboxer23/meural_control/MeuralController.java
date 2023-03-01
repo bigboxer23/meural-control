@@ -286,7 +286,7 @@ public class MeuralController {
 	@GetMapping(value = "/getCurrentSource", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(
 			summary = "Get the current source for content",
-			description = "Content source, 0 is google photos, 1 is openAI TextCompletion Dall-e, 3 is"
+			description = "Content source, 0 is google photos, 1 is openAI TextCompletion Dall-e, 2 is"
 					+ " OpenAI ChatGPT Dall-e.")
 	@ApiResponses({
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),

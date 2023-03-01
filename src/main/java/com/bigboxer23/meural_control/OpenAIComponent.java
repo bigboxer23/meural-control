@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.util.Optional;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,7 +74,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 	}
 
 	public void updatePrompt(String newPrompt) {
-		prompt = newPrompt.trim().replace("\n", " ");
+		prompt = StringUtils.truncate(newPrompt.trim().replace("\n", " "), 900);
 		try {
 			FileUtils.writeStringToFile(lastPrompt, prompt, Charset.defaultCharset(), false);
 		} catch (IOException e) {
