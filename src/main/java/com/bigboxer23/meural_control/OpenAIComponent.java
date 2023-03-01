@@ -45,6 +45,8 @@ public class OpenAIComponent implements IMeuralImageSource {
 
 	private final Environment env;
 
+	private int mode;
+
 	public OpenAIComponent(Environment env, GoogleCalendarComponent gCalendarComp) {
 		this.env = env;
 		prompt = env.getProperty("openai-prompt"); // Do here instead of via annotation, so we can control
@@ -80,7 +82,11 @@ public class OpenAIComponent implements IMeuralImageSource {
 	}
 
 	private Optional<SourceItem> generateItem() {
-		generateNewPrompt(true).ifPresent(this::updatePrompt);
+		if (mode == 1) {
+			generateNewPromptTextCompletion(true).ifPresent(this::updatePrompt);
+		} else if (mode == 2) {
+			generateNewPrompt().ifPresent(this::updatePrompt);
+		}
 		logger.info(
 				"Requesting generated image for prompt: \"" + prompt + gCalendarComponent.getHolidayString() + "\"");
 		RequestBody body = RequestBody.create(
@@ -117,7 +123,35 @@ public class OpenAIComponent implements IMeuralImageSource {
 		prompt = env.getProperty("openai-prompt");
 	}
 
-	private Optional<String> generateNewPrompt(boolean shouldRetry) {
+	private Optional<String> generateNewPrompt() {
+		logger.info("Requesting generated prompt: \"" + prompt + "\"");
+		RequestBody body = RequestBody.create(
+				moshi.adapter(OpenAIChatCompletionBody.class)
+						.toJson(new OpenAIChatCompletionBody("generate a random art prompt based on: " + prompt, user)),
+				JSON);
+		try (Response response = getRequest("v1/chat/completions", body)) {
+			if (response.isSuccessful()) {
+				String bodyContent = response.body().string();
+				OpenAICompletionResponse openAIResponse =
+						moshi.adapter(OpenAICompletionResponse.class).fromJson(bodyContent);
+				if (openAIResponse != null && openAIResponse.getChoices().length > 0) {
+					String text = openAIResponse
+							.getChoices()[0]
+							.getMessage()
+							.getContent()
+							.trim();
+					logger.info("new prompt generated: \"" + text + "\"");
+					return Optional.of(text);
+				}
+			}
+		} catch (IOException e) {
+			logger.warn("generateNewPrompt", e);
+		}
+		logger.warn("generated empty suggestion");
+		return Optional.empty();
+	}
+
+	private Optional<String> generateNewPromptTextCompletion(boolean shouldRetry) {
 		logger.info("Requesting generated prompt: \"" + prompt + "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAICompletionBody.class)
@@ -145,7 +179,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 			logger.warn("generateNewPrompt", e);
 		}
 		if (shouldRetry) {
-			return generateNewPrompt(false); // if we fail to get a suggestion, try once more
+			return generateNewPromptTextCompletion(false); // if we fail to get a suggestion, try once more
 		}
 		logger.warn("generated empty suggestion");
 		return Optional.empty();
@@ -159,5 +193,9 @@ public class OpenAIComponent implements IMeuralImageSource {
 
 	public Optional<String> getPrompt() {
 		return Optional.ofNullable(prompt);
+	}
+
+	public void setMode(int theMode) {
+		mode = theMode;
 	}
 }

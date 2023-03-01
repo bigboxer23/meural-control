@@ -68,7 +68,9 @@ public class SchedulerComponent {
 				currentSource = gPhotosAPI;
 				break;
 			case 1:
+			case 2:
 				currentSource = openAIAPI;
+				openAIAPI.setMode(sourceOrdinal);
 				break;
 		}
 		sourceStorage.set(sourceOrdinal);
