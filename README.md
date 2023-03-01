@@ -3,9 +3,10 @@
 # meural-control
 
 This project provides ability to push content to a Meural display from content sources not supported by the official software.
-Supported sources include <b>OpenAI (Dall-e)</b>, a <b>Google Photos Album</b>, or an <b>external URL</b>. It provides a webserver and services
-with swagger documented endpoints that can be leveraged to control the Meural and push arbitrary content.
-The user/pw of the netgear account need to be provided, so we can fetch the Meural information and control it locally.
+Supported sources include <b>OpenAI TextCompletion -> Dall-e</b>, <b>OpenAI ChatGPT -> Dall-e</b>, a <b>Google Photos Album</b>, 
+or an <b>external URL</b>. It provides a webserver and services with swagger documented endpoints that can be leveraged 
+to control the Meural and push arbitrary content. The user/pw of the netgear account need to be provided, so we can fetch 
+the Meural information and control it locally.
 
 It leverages Meural's API which their web-interface and mobile app run on. Documentation can be found <a href="https://documenter.getpostman.com/view/1657302/RVnWjKUL#intro/">here.</a><br>
 
@@ -38,9 +39,9 @@ to push content from.
 
 This source allows using OpenAI's dall-e text to image generator to create custom images to display on the frame from a
 text prompt provided by the application.properties file or by updating the prompt used via rest endpoint. The prompt
-is fed into GPT-3 text completion each new image request, so it slowly morphs over time to something different. The
-prompts are potentially saved with the file names if a gPhotos album name is defined (openai-save-album). Note: using
-this endpoint does require OpenAI credits.
+is fed into either the GPT-3 text completion or ChatGPT's chat completion with each new image request, so it slowly morphs
+over time to something different. The prompts are potentially saved with the file names if a gPhotos album name is defined
+(openai-save-album). Note: using this endpoint does require OpenAI credits.
 
 This endpoint also integrates with Google calendar to retrieve the US Holiday calendar. It will apply the holiday's name
 for a week prior to holiday to any AI generated prompts so some spicy holiday content will get generated.
