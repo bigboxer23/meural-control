@@ -85,7 +85,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 	private Optional<SourceItem> generateItem() {
 		if (mode == 1) {
 			generateNewPromptTextCompletion(true).ifPresent(this::updatePrompt);
-		} else if (mode == 2) {
+		} else if (mode == 2 || mode == 3) {
 			generateNewPrompt().ifPresent(this::updatePrompt);
 		}
 		logger.info(
@@ -128,7 +128,8 @@ public class OpenAIComponent implements IMeuralImageSource {
 		logger.info("Requesting generated prompt: \"" + prompt + "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAIChatCompletionBody.class)
-						.toJson(new OpenAIChatCompletionBody("generate a random art prompt based on: " + prompt, user)),
+						.toJson(new OpenAIChatCompletionBody(
+								"generate a random art prompt based on: " + prompt, user, mode)),
 				JSON);
 		try (Response response = getRequest("v1/chat/completions", body)) {
 			if (response.isSuccessful()) {
