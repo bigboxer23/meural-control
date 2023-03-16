@@ -69,6 +69,7 @@ public class SchedulerComponent {
 				break;
 			case 1:
 			case 2:
+			case 3:
 				currentSource = openAIAPI;
 				openAIAPI.setMode(sourceOrdinal);
 				break;

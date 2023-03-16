@@ -39,7 +39,7 @@ to push content from.
 
 This source allows using OpenAI's dall-e text to image generator to create custom images to display on the frame from a
 text prompt provided by the application.properties file or by updating the prompt used via rest endpoint. The prompt
-is fed into either the GPT-3 text completion or ChatGPT's chat completion with each new image request, so it slowly morphs
+is fed into either the GPT-3 text completion or ChatGPT-3's (or ChatGPT-4's) chat completion with each new image request, so it slowly morphs
 over time to something different. The prompts are potentially saved with the file names if a gPhotos album name is defined
 (openai-save-album). Note: using this endpoint does require OpenAI credits.
 
