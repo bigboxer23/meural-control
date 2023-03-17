@@ -15,6 +15,7 @@ import java.util.Arrays;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -154,6 +155,13 @@ public class MeuralComponent {
 		}
 	}
 
+	private String getMeuralName(SourceItem sourceItem) {
+		if (sourceItem.getName().length() <= 512) {
+			return sourceItem.getName();
+		}
+		return StringUtils.truncate(sourceItem.getName(), 512) + "." + FilenameUtils.getExtension(sourceItem.getName());
+	}
+
 	private MeuralItem uploadItemToMeural(SourceItem sourceItem) throws IOException {
 		sourceItem.setTempFile(transformComponent.transformItem(sourceItem.getTempFile()));
 		logger.info("uploading file to Meural " + sourceItem.getName());
@@ -163,7 +171,7 @@ public class MeuralComponent {
 						.setType(MultipartBody.FORM)
 						.addFormDataPart(
 								"image",
-								sourceItem.getName(),
+								getMeuralName(sourceItem),
 								RequestBody.create(sourceItem.getTempFile(), getMediaType(sourceItem.getTempFile())))
 						.build(),
 				getAuthCallback())) {
