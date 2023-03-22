@@ -2,7 +2,7 @@ package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GooglePhotosComponent;
-import com.bigboxer23.utils.FilePersistentIndex;
+import com.bigboxer23.utils.file.FilePersistentIndex;
 import java.io.IOException;
 import java.util.Optional;
 import org.slf4j.Logger;
