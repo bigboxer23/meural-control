@@ -46,6 +46,10 @@ over time to something different. The prompts are potentially saved with the fil
 This endpoint also integrates with Google calendar to retrieve the US Holiday calendar. It will apply the holiday's name
 for a week prior to holiday to any AI generated prompts so some spicy holiday content will get generated.
 
+### James Webb Space Telescope
+
+This source scrapes content from https://webbtelescope.org/ and when new content is posted, will display it on the Meural.
+
 ### External URL
 
 `displayContentFromUrl` endpoint allows the application to fetch the content from the provided URL and attempt to display
@@ -70,6 +74,8 @@ openai-key=[<i>your openAI api key here</i>]<br>
 openai-prompt=[<i>A prompt to start generating artwork with Example:astronaut cats orbiting around a planet in the style of van gogh</i>]<br>
 openai-save-album=[<i>An album in google photos where images which are not sourced from gPhotos directly can be saved.
 Leave blank if no save is desired Example:empty or "Ai Art"</i>]<br>
+jwst-save-album=[<i>An album in google photos where fetched images can be saved.
+Leave blank if no save is desired Example:empty or "James Webb Space Telescope"</i>]<br>
 transform-command=[<i>Call an external command on an image prior to display. First parameter is the downloaded file,
 second parameter is where the new file is saved. Leave blank to do nothing. Example:convert %s -crop 960x1440+0+0 %s</i>]
 transform-preview-commmand=[<i>Call an external command on an image prior to preview display. First parameter is the downloaded file,

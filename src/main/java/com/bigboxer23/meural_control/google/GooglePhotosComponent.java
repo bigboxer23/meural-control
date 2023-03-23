@@ -2,7 +2,7 @@ package com.bigboxer23.meural_control.google;
 
 import com.bigboxer23.meural_control.IMeuralImageSource;
 import com.bigboxer23.meural_control.data.SourceItem;
-import com.bigboxer23.utils.FilePersistentIndex;
+import com.bigboxer23.utils.file.FilePersistentIndex;
 import com.google.api.gax.rpc.ApiException;
 import com.google.photos.library.v1.PhotosLibraryClient;
 import com.google.photos.library.v1.PhotosLibrarySettings;

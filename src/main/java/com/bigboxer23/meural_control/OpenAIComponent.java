@@ -2,16 +2,13 @@ package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GoogleCalendarComponent;
-import com.bigboxer23.utils.FilePersistentIndex;
+import com.bigboxer23.utils.file.FilePersistedString;
 import com.bigboxer23.utils.http.OkHttpUtil;
 import com.squareup.moshi.Moshi;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Optional;
 import okhttp3.*;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,16 +26,13 @@ public class OpenAIComponent implements IMeuralImageSource {
 	@Value("${openai-key}")
 	private String apiKey;
 
-	private String prompt;
-
 	@Value("${meural-account}")
 	private String user;
 
 	@Value("${openai-save-album}")
 	private String albumToSaveTo;
 
-	private final File lastPrompt =
-			new File(System.getProperty("user.dir") + File.separator + FilePersistentIndex.kPrefix + "openAIPrompt");
+	private final FilePersistedString lastPrompt = new FilePersistedString("openAIPrompt");
 
 	private final Moshi moshi = new Moshi.Builder().build();
 
@@ -50,15 +44,9 @@ public class OpenAIComponent implements IMeuralImageSource {
 
 	public OpenAIComponent(Environment env, GoogleCalendarComponent gCalendarComp) {
 		this.env = env;
-		prompt = env.getProperty("openai-prompt"); // Do here instead of via annotation, so we can control
-		// ordering
-		if (lastPrompt.exists()) {
-			try {
-				prompt = FileUtils.readFileToString(lastPrompt, Charset.defaultCharset());
-				logger.warn("read prompt: " + prompt);
-			} catch (IOException e) {
-				logger.warn("error reading prompt", e);
-			}
+		if (lastPrompt.get().isBlank()) {
+			lastPrompt.set(env.getProperty("openai-prompt")); // Do here instead of via annotation, so we can
+			// control
 		}
 		gCalendarComponent = gCalendarComp;
 	}
@@ -74,12 +62,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 	}
 
 	public void updatePrompt(String newPrompt) {
-		prompt = StringUtils.truncate(newPrompt.trim().replace("\n", " "), 900);
-		try {
-			FileUtils.writeStringToFile(lastPrompt, prompt, Charset.defaultCharset(), false);
-		} catch (IOException e) {
-			logger.warn("error writing prompt", e);
-		}
+		lastPrompt.set(StringUtils.truncate(newPrompt.trim().replace("\n", " "), 900));
 	}
 
 	private Optional<SourceItem> generateItem() {
@@ -88,11 +71,14 @@ public class OpenAIComponent implements IMeuralImageSource {
 		} else if (mode == 2 || mode == 3) {
 			generateNewPrompt().ifPresent(this::updatePrompt);
 		}
-		logger.info(
-				"Requesting generated image for prompt: \"" + prompt + gCalendarComponent.getHolidayString() + "\"");
+		logger.info("Requesting generated image for prompt: \""
+				+ lastPrompt.get()
+				+ gCalendarComponent.getHolidayString()
+				+ "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAIImageGenerationBody.class)
-						.toJson(new OpenAIImageGenerationBody(prompt + gCalendarComponent.getHolidayString(), user)),
+						.toJson(new OpenAIImageGenerationBody(
+								lastPrompt.get() + gCalendarComponent.getHolidayString(), user)),
 				JSON);
 		try (Response response = getRequest("v1/images/generations", body)) {
 			if (response.isSuccessful()) {
@@ -100,7 +86,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 						.fromJson(response.body().string());
 				if (openAIResponse.getData().length > 0) {
 					return Optional.of(new SourceItem(
-							prompt + gCalendarComponent.getHolidayString() + ".png",
+							lastPrompt.get() + gCalendarComponent.getHolidayString() + ".png",
 							new URL(openAIResponse.getData()[0].getUrl()),
 							albumToSaveTo));
 				}
@@ -115,21 +101,21 @@ public class OpenAIComponent implements IMeuralImageSource {
 
 	private void resetPrompt(String body, int code) {
 		logger.warn("request was not successful for "
-				+ prompt
+				+ lastPrompt.get()
 				+ gCalendarComponent.getHolidayString()
 				+ ". "
 				+ body
 				+ " "
 				+ code);
-		prompt = env.getProperty("openai-prompt");
+		lastPrompt.set(env.getProperty("openai-prompt"));
 	}
 
 	private Optional<String> generateNewPrompt() {
-		logger.info("Requesting generated prompt: \"" + prompt + "\"");
+		logger.info("Requesting generated prompt: \"" + lastPrompt.get() + "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAIChatCompletionBody.class)
 						.toJson(new OpenAIChatCompletionBody(
-								"generate a random art prompt based on: " + prompt, user, mode)),
+								"generate a random art prompt based on: " + lastPrompt.get(), user, mode)),
 				JSON);
 		try (Response response = getRequest("v1/chat/completions", body)) {
 			if (response.isSuccessful()) {
@@ -154,10 +140,11 @@ public class OpenAIComponent implements IMeuralImageSource {
 	}
 
 	private Optional<String> generateNewPromptTextCompletion(boolean shouldRetry) {
-		logger.info("Requesting generated prompt: \"" + prompt + "\"");
+		logger.info("Requesting generated prompt: \"" + lastPrompt.get() + "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAICompletionBody.class)
-						.toJson(new OpenAICompletionBody("generate a random art prompt based on: " + prompt, user)),
+						.toJson(new OpenAICompletionBody(
+								"generate a random art prompt based on: " + lastPrompt.get(), user)),
 				JSON);
 		try (Response response = getRequest("v1/completions", body)) {
 			if (response.isSuccessful()) {
@@ -166,8 +153,8 @@ public class OpenAIComponent implements IMeuralImageSource {
 						moshi.adapter(OpenAICompletionResponse.class).fromJson(bodyContent);
 				if (openAIResponse != null && openAIResponse.getChoices().length > 0) {
 					String text = openAIResponse.getChoices()[0].getText().trim();
-					if (prompt.equals(text) || text.split(" ").length < 6) {
-						if (!shouldRetry && !prompt.equalsIgnoreCase(env.getProperty("openai-prompt"))) {
+					if (lastPrompt.get().equals(text) || text.split(" ").length < 6) {
+						if (!shouldRetry && !lastPrompt.get().equalsIgnoreCase(env.getProperty("openai-prompt"))) {
 							resetPrompt(bodyContent, response.code());
 							shouldRetry = true;
 						}
@@ -194,7 +181,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 	}
 
 	public Optional<String> getPrompt() {
-		return Optional.ofNullable(prompt);
+		return Optional.ofNullable(lastPrompt.get());
 	}
 
 	public void setMode(int theMode) {
