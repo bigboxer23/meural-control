@@ -4,8 +4,8 @@
 
 This project provides ability to push content to a Meural display from content sources not supported by the official software.
 Supported sources include <b>OpenAI TextCompletion -> Dall-e</b>, <b>OpenAI ChatGPT -> Dall-e</b>, a <b>Google Photos Album</b>,
-<b>Google Photos Album</b>, or an <b>external URL</b>. It provides a webserver and services with swagger documented endpoints 
-that can be leveraged to control the Meural and push arbitrary content. The user/pw of the netgear account need to be provided, 
+<b>James Webb Space Telescope</b>, or an <b>external URL</b>. It provides a webserver and services with swagger documented endpoints
+that can be leveraged to control the Meural and push arbitrary content. The user/pw of the netgear account need to be provided,
 so we can fetch the Meural information and control it locally.
 
 It leverages Meural's API which their web-interface and mobile app run on. Documentation can be found <a href="https://documenter.getpostman.com/view/1657302/RVnWjKUL#intro/">here.</a><br>

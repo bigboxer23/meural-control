@@ -88,7 +88,9 @@ public class JWSTComponent implements IMeuralImageSource {
 			page = client.getPage(kJWSTUrl + link.get(0).getHrefAttribute());
 			List<HtmlAnchor> downloadLinks = page.getByXPath("//a");
 			if (downloadLinks.isEmpty()) {
-				logger.warn("can't find download links for " + kJWSTUrl + link.get(0).getHrefAttribute());
+				logger.warn("can't find download links for "
+						+ kJWSTUrl
+						+ link.get(0).getHrefAttribute());
 				return;
 			}
 			newestContent = findHighResLink(downloadLinks, content);
