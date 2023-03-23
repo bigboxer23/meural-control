@@ -58,6 +58,7 @@ public class MeuralComponent {
 
 	private String getToken() {
 		if (token == null) {
+			logger.info("fetching service meural token");
 			try (Response response = OkHttpUtil.postSynchronous(
 					apiUrl + "authenticate",
 					new FormBody.Builder()
@@ -65,12 +66,12 @@ public class MeuralComponent {
 							.add("password", password)
 							.build(),
 					null)) {
-				if (response.isSuccessful()) {
-					token = moshi.adapter(Token.class)
-							.fromJson(response.body().string())
-							.getToken();
+				if (!response.isSuccessful()) {
+					throw new IOException(response.message());
 				}
-				logger.warn("authenticate response: " + response.code());
+				token = moshi.adapter(Token.class)
+						.fromJson(response.body().string())
+						.getToken();
 			} catch (IOException e) {
 				logger.error("getToken", e);
 			}
@@ -86,7 +87,7 @@ public class MeuralComponent {
 		if (meuralDevice != null) {
 			return meuralDevice;
 		}
-		logger.warn("fetching device info");
+		logger.info("fetching device info from meural service");
 		try (Response response =
 				OkHttpUtil.getSynchronous(apiUrl + "user/devices?count=10&page=1", getAuthCallback())) {
 			if (!response.isSuccessful()) {
@@ -105,12 +106,15 @@ public class MeuralComponent {
 	}
 
 	private MeuralStringResponse addItemToPlaylistAndDisplay(SourceItem sourceItem) throws IOException {
-		logger.info("adding new file to playlist " + sourceItem.getName());
+		logger.info("starting add new file to playlist \"" + sourceItem.getName() + "\"");
 		MeuralItem item = uploadItemToMeural(sourceItem);
 		MeuralPlaylist playlist = getOrCreatePlaylist();
-		addItemToPlaylist(playlist.getId(), item.getId());
-		deleteItemsFromPlaylist(playlist);
-		addPlaylistToDevice(getDevice().getId(), playlist.getId());
+		// Check if we already had this item in the playlist. If we did, no need to do anything
+		if (Arrays.stream(playlist.getItemIds()).noneMatch(id -> id == Integer.parseInt(item.getId()))) {
+			addItemToPlaylist(playlist.getId(), item.getId());
+			deleteItemsFromPlaylist(playlist);
+			addPlaylistToDevice(getDevice().getId(), playlist.getId());
+		}
 		MeuralStringResponse response = new MeuralStringResponse();
 		response.setStatus("pass");
 		return response;
@@ -164,7 +168,7 @@ public class MeuralComponent {
 
 	private MeuralItem uploadItemToMeural(SourceItem sourceItem) throws IOException {
 		sourceItem.setTempFile(transformComponent.transformItem(sourceItem.getTempFile()));
-		logger.info("uploading file to Meural " + sourceItem.getName());
+		logger.info("uploading file to Meural service \"" + sourceItem.getName() + "\"");
 		try (Response response = OkHttpUtil.postSynchronous(
 				apiUrl + "items",
 				new MultipartBody.Builder()
@@ -187,7 +191,7 @@ public class MeuralComponent {
 	}
 
 	private MeuralPlaylist getOrCreatePlaylist() throws IOException {
-		logger.info("get playlist info for " + playlistName);
+		logger.info("get playlist info for \"" + playlistName + "\"");
 		try (Response response =
 				OkHttpUtil.getSynchronous(apiUrl + "user/galleries?count=10&page=1", getAuthCallback())) {
 			String body = response.body().string();
@@ -272,8 +276,10 @@ public class MeuralComponent {
 	private MeuralStringResponse fetchItem(SourceItem item, Command<MeuralStringResponse> command) throws IOException {
 		// If temp file is set and exists, don't fetch it again.
 		if (item.getTempFile() != null && item.getTempFile().exists()) {
+			logger.info("item exists, not re-downloading \"" + item.getName() + "\"");
 			return executeAfterFetchCommand(item, command);
 		}
+		logger.info("downloading item for \"" + item.getName() + "\"");
 		String extension = FilenameUtils.getExtension(
 				item.getName() != null
 						? item.getName()
@@ -299,7 +305,7 @@ public class MeuralComponent {
 	}
 
 	public MeuralStringResponse previewItem(SourceItem item, boolean transform) throws IOException {
-		return fetchItem(item, () -> changePictureWithPreview(item.getTempFile(), transform));
+		return fetchItem(item, () -> changePictureWithPreview(item, transform));
 	}
 
 	public MeuralStringResponse changePicture(SourceItem item) throws IOException {
@@ -314,11 +320,12 @@ public class MeuralComponent {
 	 * @return
 	 * @throws IOException
 	 */
-	public MeuralStringResponse changePictureWithPreview(File file, boolean transform) throws IOException {
+	public MeuralStringResponse changePictureWithPreview(SourceItem item, boolean transform) throws IOException {
+		File file = item.getTempFile();
 		if (transform) {
 			file = transformComponent.transformPreviewItem(file);
 		}
-		logger.info("changing picture " + file.getAbsolutePath());
+		logger.info("previewing directly on meural \"" + item.getName() + "\"");
 		try (Response response = OkHttpUtil.postSynchronous(
 				getDeviceURL() + "/remote/postcard",
 				new MultipartBody.Builder()
