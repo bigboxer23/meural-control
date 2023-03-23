@@ -15,7 +15,7 @@ import java.util.Optional;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -32,10 +32,11 @@ public class JWSTComponent implements IMeuralImageSource {
 
 	private static final String kJWSTUrl = "https://webbtelescope.org";
 
-	@Value("${jwst-save-album}")
 	private String albumToSaveTo;
 
-	public JWSTComponent() {
+	public JWSTComponent(Environment env) {
+		// need to read here since we need this value before the constructor completes
+		albumToSaveTo = env.getProperty("jwst-save-album");
 		checkForNewContent();
 	}
 
