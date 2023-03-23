@@ -2,6 +2,7 @@ package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GooglePhotosComponent;
+import com.bigboxer23.meural_control.jwst.JWSTComponent;
 import com.bigboxer23.utils.file.FilePersistentIndex;
 import java.io.IOException;
 import java.util.Optional;
@@ -19,6 +20,8 @@ public class SchedulerComponent {
 
 	private final OpenAIComponent openAIAPI;
 
+	private final JWSTComponent jwstAPI;
+
 	private final MeuralComponent api;
 
 	private IMeuralImageSource currentSource;
@@ -26,9 +29,13 @@ public class SchedulerComponent {
 	private FilePersistentIndex sourceStorage = new FilePersistentIndex("meuralSource");
 
 	public SchedulerComponent(
-			GooglePhotosComponent gPhotos, MeuralComponent meuralComponent, OpenAIComponent openAIComponent) {
+			GooglePhotosComponent gPhotos,
+			MeuralComponent meuralComponent,
+			OpenAIComponent openAIComponent,
+			JWSTComponent jwstComponent) {
 		gPhotosAPI = gPhotos;
 		openAIAPI = openAIComponent;
+		jwstAPI = jwstComponent;
 		api = meuralComponent;
 		changeSource(sourceStorage.get());
 	}
@@ -72,6 +79,9 @@ public class SchedulerComponent {
 			case 3:
 				currentSource = openAIAPI;
 				openAIAPI.setMode(sourceOrdinal);
+				break;
+			case 4:
+				currentSource = jwstAPI;
 				break;
 		}
 		sourceStorage.set(sourceOrdinal);

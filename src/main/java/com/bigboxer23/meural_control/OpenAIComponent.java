@@ -44,9 +44,9 @@ public class OpenAIComponent implements IMeuralImageSource {
 
 	public OpenAIComponent(Environment env, GoogleCalendarComponent gCalendarComp) {
 		this.env = env;
-		if (lastPrompt.get().isBlank())
-		{
-			lastPrompt.set(env.getProperty("openai-prompt"));// Do here instead of via annotation, so we can control
+		if (lastPrompt.get().isBlank()) {
+			lastPrompt.set(env.getProperty("openai-prompt")); // Do here instead of via annotation, so we can
+			// control
 		}
 		gCalendarComponent = gCalendarComp;
 	}
@@ -71,11 +71,14 @@ public class OpenAIComponent implements IMeuralImageSource {
 		} else if (mode == 2 || mode == 3) {
 			generateNewPrompt().ifPresent(this::updatePrompt);
 		}
-		logger.info(
-				"Requesting generated image for prompt: \"" + lastPrompt.get() + gCalendarComponent.getHolidayString() + "\"");
+		logger.info("Requesting generated image for prompt: \""
+				+ lastPrompt.get()
+				+ gCalendarComponent.getHolidayString()
+				+ "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAIImageGenerationBody.class)
-						.toJson(new OpenAIImageGenerationBody(lastPrompt.get() + gCalendarComponent.getHolidayString(), user)),
+						.toJson(new OpenAIImageGenerationBody(
+								lastPrompt.get() + gCalendarComponent.getHolidayString(), user)),
 				JSON);
 		try (Response response = getRequest("v1/images/generations", body)) {
 			if (response.isSuccessful()) {
@@ -140,7 +143,8 @@ public class OpenAIComponent implements IMeuralImageSource {
 		logger.info("Requesting generated prompt: \"" + lastPrompt.get() + "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAICompletionBody.class)
-						.toJson(new OpenAICompletionBody("generate a random art prompt based on: " + lastPrompt.get(), user)),
+						.toJson(new OpenAICompletionBody(
+								"generate a random art prompt based on: " + lastPrompt.get(), user)),
 				JSON);
 		try (Response response = getRequest("v1/completions", body)) {
 			if (response.isSuccessful()) {

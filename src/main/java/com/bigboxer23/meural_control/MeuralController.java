@@ -272,12 +272,12 @@ public class MeuralController {
 				description = "ordinal to change backing sources.",
 				required = true,
 				example = "0=Google Photos Album, 1=OpenAI TextCompletion Dall-e, 2=OpenAI ChatGPT-3 "
-						+ " Dall-e, 3=OpenAI ChatGPT-4 Dall-e",
+						+ " Dall-e, 3=OpenAI ChatGPT-4 Dall-e, 4=James Webb Space Telescope",
 				schema =
 						@Schema(
 								type = "string",
 								defaultValue = "0",
-								allowableValues = {"0", "1", "2", "3"}))
+								allowableValues = {"0", "1", "2", "3", "4"}))
 	})
 	public MeuralResponse changeSource(int source, HttpServletResponse servletResponse) {
 		scheduler.changeSource(source);
@@ -288,7 +288,8 @@ public class MeuralController {
 	@Operation(
 			summary = "Get the current source for content",
 			description = "Content source, 0 is google photos, 1 is openAI TextCompletion Dall-e, 2 is"
-					+ " OpenAI ChatGPT-3 Dall-e, 3 is OpenAI ChatGPT-4 Dall-e.")
+					+ " OpenAI ChatGPT-3 Dall-e, 3 is OpenAI ChatGPT-4 Dall-e, 4 is James Webb"
+					+ " Space Telescope content")
 	@ApiResponses({
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
