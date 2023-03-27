@@ -74,7 +74,7 @@
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-calendar</artifactId>
-      <version>v3-rev20230313-2.0.0</version>
+      <version>v3-rev20230317-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.auth</groupId>
@@ -145,7 +145,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.1.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
