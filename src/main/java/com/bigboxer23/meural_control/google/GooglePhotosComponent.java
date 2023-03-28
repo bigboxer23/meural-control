@@ -101,6 +101,7 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 	}
 
 	public void uploadItemToAlbum(SourceItem item) {
+		logger.info("uploading item to google photos album: \"" + item.getName() + "\"");
 		try {
 			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder()
 					.setCredentialsProvider(credentialProviderComponent.getCredentialProvider())
@@ -117,7 +118,7 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 					logger.warn("uploadUrlToAlbum error", error.getCause());
 					return;
 				}
-				if (!response.getUploadToken().isPresent()) {
+				if (response.getUploadToken().isEmpty()) {
 					logger.warn("uploadUrlToAlbum no upload token exists");
 					return;
 				}

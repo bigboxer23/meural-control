@@ -106,7 +106,7 @@ public class MeuralComponent {
 	}
 
 	private MeuralStringResponse addItemToPlaylistAndDisplay(SourceItem sourceItem) throws IOException {
-		logger.info("starting add new file to playlist \"" + sourceItem.getName() + "\"");
+		logger.info("starting add new file to playlist: \"" + sourceItem.getName() + "\"");
 		MeuralItem item = uploadItemToMeural(sourceItem);
 		MeuralPlaylist playlist = getOrCreatePlaylist();
 		// Check if we already had this item in the playlist. If we did, no need to do anything
@@ -115,6 +115,7 @@ public class MeuralComponent {
 			deleteItemsFromPlaylist(playlist);
 			addPlaylistToDevice(getDevice().getId(), playlist.getId());
 		}
+		logger.info("completed adding new file to playlist: \"" + sourceItem.getName() + "\"");
 		MeuralStringResponse response = new MeuralStringResponse();
 		response.setStatus("pass");
 		return response;
