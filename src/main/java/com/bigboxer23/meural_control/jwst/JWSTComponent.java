@@ -2,7 +2,7 @@ package com.bigboxer23.meural_control.jwst;
 
 import com.bigboxer23.meural_control.IMeuralImageSource;
 import com.bigboxer23.meural_control.data.SourceItem;
-import com.bigboxer23.utils.file.FilePersistedString;
+import com.bigboxer23.utils.file.FilePersistentIndex;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlDivision;
@@ -16,7 +16,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -26,25 +25,24 @@ import org.springframework.stereotype.Component;
 public class JWSTComponent implements IMeuralImageSource {
 	private static final Logger logger = LoggerFactory.getLogger(JWSTComponent.class);
 
-	private final FilePersistedString lastFetched = new FilePersistedString("jwst");
-
+	private final FilePersistentIndex lastFetchedImage = new FilePersistentIndex("jwsti");
 	private SourceItem newestContent;
 
 	private static final String kJWSTUrl = "https://webbtelescope.org";
 
-	private String albumToSaveTo;
+	private final String albumToSaveTo;
 
 	public JWSTComponent(Environment env) {
 		// need to read here since we need this value before the constructor completes
 		albumToSaveTo = env.getProperty("jwst-save-album");
-		checkForNewContent();
+		fetchContent();
 	}
 
-	private SourceItem findHighResLink(List<HtmlAnchor> anchors, String content) {
+	private Optional<SourceItem> findHighResLink(List<HtmlAnchor> anchors, String content) {
 		return anchors.stream()
 				.filter(anchor -> {
 					String text = anchor.getTextContent().toLowerCase();
-					return text.contains("full res.") && (text.contains("png") || text.contains("jpg"));
+					return text.contains("full res") && (text.contains("png") || text.contains("jpg"));
 				})
 				.findAny()
 				.map(anchor -> {
@@ -57,12 +55,10 @@ public class JWSTComponent implements IMeuralImageSource {
 						logger.warn("findHighResLink", e);
 					}
 					return null;
-				})
-				.orElse(null);
+				});
 	}
 
-	@Scheduled(cron = "0 0 0 ? * *")
-	private void checkForNewContent() {
+	private void fetchContent() {
 		try (WebClient client = new WebClient()) {
 			client.getOptions().setCssEnabled(false);
 			client.getOptions().setJavaScriptEnabled(false);
@@ -73,15 +69,15 @@ public class JWSTComponent implements IMeuralImageSource {
 				logger.warn("can't find images on page");
 				return;
 			}
-			String content = images.get(0).getTextContent().trim();
-			if (newestContent != null
-					&& !lastFetched.get().isBlank()
-					&& lastFetched.get().equals(content)) {
-				logger.debug("previous content is already displayed");
-				return;
+			if (lastFetchedImage.get() == -1) {
+				lastFetchedImage.set(images.size() - 1);
 			}
-			logger.info("Found new JWST content: " + content);
-			List<HtmlAnchor> link = images.get(0).getByXPath("a");
+			if (images.size() <= lastFetchedImage.get()) {
+				lastFetchedImage.set(0);
+			}
+			String content = images.get(lastFetchedImage.get()).getTextContent().trim();
+			logger.info("Fetched JWST content: " + content);
+			List<HtmlAnchor> link = images.get(lastFetchedImage.get()).getByXPath("a");
 			if (link.isEmpty()) {
 				logger.warn("can't find link for content");
 				return;
@@ -94,10 +90,11 @@ public class JWSTComponent implements IMeuralImageSource {
 						+ link.get(0).getHrefAttribute());
 				return;
 			}
-			newestContent = findHighResLink(downloadLinks, content);
-			if (newestContent != null) {
-				lastFetched.set(content);
-			}
+			newestContent = findHighResLink(downloadLinks, content)
+					.orElseThrow(() -> new IOException("can't fetch image from: \""
+							+ kJWSTUrl
+							+ link.get(0).getHrefAttribute()
+							+ "\""));
 		} catch (IOException e) {
 			logger.warn("JWSTComponent", e);
 		}
@@ -105,11 +102,17 @@ public class JWSTComponent implements IMeuralImageSource {
 
 	@Override
 	public Optional<SourceItem> nextItem() {
-		return Optional.ofNullable(newestContent);
+		return getItem(1);
 	}
 
 	@Override
 	public Optional<SourceItem> prevItem() {
+		return getItem(-1);
+	}
+
+	private Optional<SourceItem> getItem(int page) {
+		lastFetchedImage.set(lastFetchedImage.get() + page);
+		fetchContent();
 		return Optional.ofNullable(newestContent);
 	}
 }
