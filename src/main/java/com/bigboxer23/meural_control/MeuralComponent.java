@@ -269,6 +269,10 @@ public class MeuralComponent {
 			return command.execute();
 		} finally {
 			if (item.isCleanupTempFile()) {
+				if (item.getAlbumToSaveTo() != null && item.getAlbumToSaveTo().length() > 0) {
+					gPhotos.uploadItemToAlbum(item);
+				}
+				logger.info("removing temp file: \"" + item.getName() + "\"");
 				item.getTempFile().delete();
 			}
 		}
@@ -298,9 +302,6 @@ public class MeuralComponent {
 		try (InputStream stream = conn.getInputStream()) {
 			FileUtils.copyInputStreamToFile(stream, temp.toFile());
 			item.setTempFile(temp.toFile());
-			if (item.getAlbumToSaveTo() != null && item.getAlbumToSaveTo().length() > 0) {
-				gPhotos.uploadItemToAlbum(item);
-			}
 			return executeAfterFetchCommand(item, command);
 		}
 	}
