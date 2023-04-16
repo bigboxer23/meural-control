@@ -10,6 +10,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.io.FilenameUtils;
@@ -29,6 +30,15 @@ public class JWSTComponent implements IMeuralImageSource {
 	private SourceItem newestContent;
 
 	private static final String kJWSTUrl = "https://webbtelescope.org";
+
+	private static final List<String> skipKeywords = new ArrayList<>() {
+		{
+			add("spectrum");
+			add("spectra");
+			add("light curve");
+			add("comparison");
+		}
+	};
 
 	private final String albumToSaveTo;
 
@@ -77,6 +87,12 @@ public class JWSTComponent implements IMeuralImageSource {
 			}
 			String content = images.get(lastFetchedImage.get()).getTextContent().trim();
 			logger.info("Fetched JWST content: " + content);
+			if (shouldSkipLink(content))
+			{
+				logger.info("Not showing " + content + ", matches skip keyword");
+				getItem(1);
+				return;
+			}
 			List<HtmlAnchor> link = images.get(lastFetchedImage.get()).getByXPath("a");
 			if (link.isEmpty()) {
 				logger.warn("can't find link for content");
@@ -98,6 +114,11 @@ public class JWSTComponent implements IMeuralImageSource {
 		} catch (IOException e) {
 			logger.warn("JWSTComponent", e);
 		}
+	}
+
+	private boolean shouldSkipLink(String link)
+	{
+		return skipKeywords.stream().anyMatch(word -> link.toLowerCase().contains(word));
 	}
 
 	@Override
