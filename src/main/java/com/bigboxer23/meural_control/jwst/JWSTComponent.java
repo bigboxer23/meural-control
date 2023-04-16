@@ -87,8 +87,7 @@ public class JWSTComponent implements IMeuralImageSource {
 			}
 			String content = images.get(lastFetchedImage.get()).getTextContent().trim();
 			logger.info("Fetched JWST content: " + content);
-			if (shouldSkipLink(content))
-			{
+			if (shouldSkipLink(content)) {
 				logger.info("Not showing " + content + ", matches skip keyword");
 				getItem(1);
 				return;
@@ -116,8 +115,7 @@ public class JWSTComponent implements IMeuralImageSource {
 		}
 	}
 
-	private boolean shouldSkipLink(String link)
-	{
+	private boolean shouldSkipLink(String link) {
 		return skipKeywords.stream().anyMatch(word -> link.toLowerCase().contains(word));
 	}
 
