@@ -27,6 +27,11 @@ public class JWSTComponent implements IMeuralImageSource {
 	private static final Logger logger = LoggerFactory.getLogger(JWSTComponent.class);
 
 	private final FilePersistentIndex lastFetchedImage = new FilePersistentIndex("jwsti");
+
+	private final FilePersistentIndex currentPage = new FilePersistentIndex("jwsti_page");
+
+	public static final int PAGE_SIZE = 15;
+
 	private SourceItem newestContent;
 
 	private static final String kJWSTUrl = "https://webbtelescope.org";
@@ -45,6 +50,12 @@ public class JWSTComponent implements IMeuralImageSource {
 	public JWSTComponent(Environment env) {
 		// need to read here since we need this value before the constructor completes
 		albumToSaveTo = env.getProperty("jwst-save-album");
+		if (currentPage.get() == -1) {
+			currentPage.set(1);
+		}
+		if (lastFetchedImage.get() == -1) {
+			lastFetchedImage.set(0);
+		}
 		fetchContent();
 	}
 
@@ -72,21 +83,34 @@ public class JWSTComponent implements IMeuralImageSource {
 		try (WebClient client = new WebClient()) {
 			client.getOptions().setCssEnabled(false);
 			client.getOptions().setJavaScriptEnabled(false);
-			HtmlPage page = client.getPage(kJWSTUrl + "/resource-gallery/images");
+			if (lastFetchedImage.get() == -1) {
+				lastFetchedImage.set(PAGE_SIZE - 1);
+				currentPage.set(currentPage.get() - 1);
+			}
+			if (currentPage.get() <= 0) {
+				currentPage.set(1);
+			}
+			if (lastFetchedImage.get() >= PAGE_SIZE) {
+				lastFetchedImage.set(0);
+				currentPage.increment();
+			}
+			HtmlPage page = client.getPage(
+					kJWSTUrl + "/resource-gallery/images?itemsPerPage=" + PAGE_SIZE + "&page=" + currentPage.get());
 			List<HtmlDivision> images =
 					page.getDocumentElement().getByXPath("//div[contains(@class,'ad-research-box')]");
-			if (images.isEmpty()) {
-				logger.warn("can't find images on page");
+			if ((images.isEmpty() && currentPage.get() != 1) // prevent looping
+					|| images.size() <= lastFetchedImage.get()) {
+				if (images.isEmpty()) {
+					logger.warn("can't find images on page: " + currentPage.get() + " index:" + lastFetchedImage);
+				}
+				currentPage.set(1);
+				lastFetchedImage.set(0);
+				fetchContent();
 				return;
 			}
-			if (lastFetchedImage.get() == -1) {
-				lastFetchedImage.set(images.size() - 1);
-			}
-			if (images.size() <= lastFetchedImage.get()) {
-				lastFetchedImage.set(0);
-			}
 			String content = images.get(lastFetchedImage.get()).getTextContent().trim();
-			logger.info("Fetched JWST content: " + content);
+			logger.info(
+					"Fetched JWST content: \"" + content + "\" index:" + getFetchedImageIndex() + " page:" + getPage());
 			if (shouldSkipLink(content)) {
 				logger.info("Not showing " + content + ", matches skip keyword");
 				getItem(1);
@@ -115,7 +139,7 @@ public class JWSTComponent implements IMeuralImageSource {
 		}
 	}
 
-	private boolean shouldSkipLink(String link) {
+	protected boolean shouldSkipLink(String link) {
 		return skipKeywords.stream().anyMatch(word -> link.toLowerCase().contains(word));
 	}
 
@@ -133,5 +157,21 @@ public class JWSTComponent implements IMeuralImageSource {
 		lastFetchedImage.set(lastFetchedImage.get() + page);
 		fetchContent();
 		return Optional.ofNullable(newestContent);
+	}
+
+	protected int getPage() {
+		return currentPage.get();
+	}
+
+	protected void setPage(int page) {
+		currentPage.set(page);
+	}
+
+	protected int getFetchedImageIndex() {
+		return lastFetchedImage.get();
+	}
+
+	protected void setFetchedImageIndex(int lastFetchedImageIndex) {
+		lastFetchedImage.set(lastFetchedImageIndex);
 	}
 }
