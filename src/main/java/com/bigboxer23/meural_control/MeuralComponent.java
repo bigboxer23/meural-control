@@ -278,7 +278,7 @@ public class MeuralComponent {
 		}
 	}
 
-	private MeuralStringResponse fetchItem(SourceItem item, Command<MeuralStringResponse> command) throws IOException {
+	public MeuralStringResponse fetchItem(SourceItem item, Command<MeuralStringResponse> command) throws IOException {
 		// If temp file is set and exists, don't fetch it again.
 		if (item.getTempFile() != null && item.getTempFile().exists()) {
 			logger.info("item exists, not re-downloading \"" + item.getName() + "\"");
