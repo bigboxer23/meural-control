@@ -97,7 +97,7 @@ public class JWSTComponent implements IMeuralImageSource {
 			HtmlPage page = client.getPage(
 					kJWSTUrl + "/resource-gallery/images?itemsPerPage=" + PAGE_SIZE + "&page=" + currentPage.get());
 			List<HtmlDivision> images =
-					page.getDocumentElement().getByXPath("//div[contains(@class,'ad-research-box')]");
+					page.getDocumentElement().getByXPath("//div[contains(@class,'ad-research-box card')]");
 			if ((images.isEmpty() && currentPage.get() != 1) // prevent looping
 					|| images.size() <= lastFetchedImage.get()) {
 				if (images.isEmpty()) {
@@ -116,7 +116,7 @@ public class JWSTComponent implements IMeuralImageSource {
 				getItem(1);
 				return;
 			}
-			List<HtmlAnchor> link = images.get(lastFetchedImage.get()).getByXPath("a");
+			List<HtmlAnchor> link = images.get(lastFetchedImage.get()).getByXPath(".//a");
 			if (link.isEmpty()) {
 				logger.warn("can't find link for content");
 				return;
