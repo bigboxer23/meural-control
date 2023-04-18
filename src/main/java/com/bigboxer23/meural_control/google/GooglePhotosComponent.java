@@ -100,7 +100,24 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 		this.albumTitle = albumTitle;
 	}
 
-	public void uploadItemToAlbum(SourceItem item) {
+	protected void removeItemFromAlbum(String albumName, MediaItem item) {
+
+		logger.info("removing item from google photos album: \"" + item.getFilename() + "\"");
+		try {
+			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder()
+					.setCredentialsProvider(credentialProviderComponent.getCredentialProvider())
+					.build();
+			try (PhotosLibraryClient photosLibraryClient = PhotosLibraryClient.initialize(settings)) {
+				photosLibraryClient.batchRemoveMediaItemsFromAlbum(
+						findOrCreateAlbumId(albumName, true, photosLibraryClient),
+						Collections.singletonList(item.getId()));
+			}
+		} catch (IOException | GeneralSecurityException | ApiException theE) {
+			logger.warn("removeItemFromAlbum:", theE);
+		}
+	}
+
+	public NewMediaItemResult uploadItemToAlbum(SourceItem item) {
 		logger.info("uploading item to google photos album: \"" + item.getName() + "\"");
 		try {
 			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder()
@@ -116,11 +133,11 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 				if (response.getError().isPresent()) {
 					UploadMediaItemResponse.Error error = response.getError().get();
 					logger.warn("uploadUrlToAlbum error", error.getCause());
-					return;
+					return null;
 				}
 				if (response.getUploadToken().isEmpty()) {
 					logger.warn("uploadUrlToAlbum no upload token exists");
-					return;
+					return null;
 				}
 				String uploadToken = response.getUploadToken().get();
 				NewMediaItem newMediaItem = NewMediaItemFactory.createNewMediaItem(
@@ -133,11 +150,13 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 					if (status.getCode() != Code.OK_VALUE) {
 						logger.warn("error creating media item: " + status.getCode() + " " + status.getMessage());
 					}
+					return itemsResponse;
 				}
 			}
 		} catch (IOException | GeneralSecurityException | ApiException theE) {
 			logger.warn("uploadUrlToAlbum:", theE);
 		}
+		return null;
 	}
 
 	private String findOrCreateAlbumId(
@@ -149,5 +168,13 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 		}
 		Album createdAlbum = client.createAlbum(albumTitle);
 		return createdAlbum.getId();
+	}
+
+	protected int getImageIndex() {
+		return currentItem.get();
+	}
+
+	protected void setImageIndex(int lastFetchedImageIndex) {
+		currentItem.set(lastFetchedImageIndex);
 	}
 }
