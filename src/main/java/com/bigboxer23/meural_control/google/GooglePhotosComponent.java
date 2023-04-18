@@ -150,4 +150,12 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 		Album createdAlbum = client.createAlbum(albumTitle);
 		return createdAlbum.getId();
 	}
+
+	protected int getImageIndex() {
+		return currentItem.get();
+	}
+
+	protected void setImageIndex(int lastFetchedImageIndex) {
+		currentItem.set(lastFetchedImageIndex);
+	}
 }
