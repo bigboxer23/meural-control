@@ -27,21 +27,19 @@ public class ImageTransformComponentTest {
 
 	@Test
 	public void testTransformPreviewItem() throws IOException {
-		internalTest(original -> assertNotEquals(
-				component.transformPreviewItem(original), original));
+		internalTest(original -> assertNotEquals(component.transformPreviewItem(original), original));
 	}
 
 	@Test
 	public void testTransformItem() throws IOException {
-		internalTest(original -> assertEquals(
-				component.transformItem(original), original));
+		internalTest(original -> assertEquals(component.transformItem(original), original));
 	}
 
 	private void internalTest(Command command) throws IOException {
 		Optional<SourceItem> item = photosComponent.nextItem();
 		assertTrue(item.isPresent());
 		meuralComponent.fetchItem(item.get(), () -> {
-					command.execute(item.get().getTempFile());
+			command.execute(item.get().getTempFile());
 			return null;
 		});
 	}

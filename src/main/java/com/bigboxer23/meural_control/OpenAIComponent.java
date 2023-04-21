@@ -65,7 +65,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 		lastPrompt.set(StringUtils.truncate(newPrompt.trim().replace("\n", " "), 900));
 	}
 
-	private Optional<SourceItem> generateItem() {
+	protected Optional<SourceItem> generateItem() {
 		if (mode == 1) {
 			generateNewPromptTextCompletion(true).ifPresent(this::updatePrompt);
 		} else if (mode == 2 || mode == 3) {
@@ -110,7 +110,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 		lastPrompt.set(env.getProperty("openai-prompt"));
 	}
 
-	private Optional<String> generateNewPrompt() {
+	protected Optional<String> generateNewPrompt() {
 		logger.info("Requesting generated prompt: \"" + lastPrompt.get() + "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAIChatCompletionBody.class)
