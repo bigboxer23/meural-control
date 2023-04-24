@@ -56,7 +56,7 @@ public class MeuralComponent {
 		transformComponent = transform;
 	}
 
-	private String getToken() {
+	protected String getToken() {
 		if (token == null) {
 			logger.info("fetching service meural token");
 			try (Response response = OkHttpUtil.postSynchronous(
@@ -83,7 +83,7 @@ public class MeuralComponent {
 		return builder -> builder.addHeader("Authorization", "Token " + getToken());
 	}
 
-	private Device getDevice() throws IOException {
+	protected Device getDevice() throws IOException {
 		if (meuralDevice != null) {
 			return meuralDevice;
 		}
@@ -191,7 +191,7 @@ public class MeuralComponent {
 		}
 	}
 
-	private MeuralPlaylist getOrCreatePlaylist() throws IOException {
+	protected MeuralPlaylist getOrCreatePlaylist() throws IOException {
 		logger.info("get playlist info for \"" + playlistName + "\"");
 		try (Response response =
 				OkHttpUtil.getSynchronous(apiUrl + "user/galleries?count=10&page=1", getAuthCallback())) {
@@ -207,7 +207,7 @@ public class MeuralComponent {
 					.findAny()
 					.orElseGet(() -> {
 						try {
-							return createPlaylist();
+							return createPlaylist(playlistName);
 						} catch (IOException e) {
 							logger.warn("orElseGet", e);
 							return null;
@@ -220,12 +220,12 @@ public class MeuralComponent {
 		}
 	}
 
-	private MeuralPlaylist createPlaylist() throws IOException {
-		logger.info("Creating playlist for " + playlistName);
+	protected MeuralPlaylist createPlaylist(String name) throws IOException {
+		logger.info("Creating playlist for " + name);
 		try (Response response = OkHttpUtil.postSynchronous(
 				apiUrl + "galleries",
 				new FormBody.Builder()
-						.add("name", playlistName)
+						.add("name", name)
 						.add("orientation", meuralOrientation)
 						.build(),
 				getAuthCallback())) {
@@ -237,6 +237,19 @@ public class MeuralComponent {
 				throw new IOException("cannot create playlist from body " + body);
 			}
 			return playlistResponse.getData();
+		}
+	}
+
+	protected void deletePlaylist(String playlistId) throws IOException {
+		logger.info("deleting playlist for " + playlistId);
+		try (Response response = OkHttpUtil.deleteSynchronous(apiUrl + "galleries/" + playlistId, getAuthCallback())) {
+			if (!response.isSuccessful()) {
+				logger.warn("cannot delete playlist "
+						+ playlistId
+						+ ", body: "
+						+ response.body().string());
+				throw new IOException("cannot create playlist " + playlistId);
+			}
 		}
 	}
 

@@ -34,6 +34,8 @@ public class JWSTComponent implements IMeuralImageSource {
 
 	private SourceItem newestContent;
 
+	private boolean increasing = true;
+
 	private static final String kJWSTUrl = "https://webbtelescope.org";
 
 	private static final List<String> skipKeywords = new ArrayList<>() {
@@ -113,7 +115,7 @@ public class JWSTComponent implements IMeuralImageSource {
 					"Fetched JWST content: \"" + content + "\" index:" + getFetchedImageIndex() + " page:" + getPage());
 			if (shouldSkipLink(content)) {
 				logger.info("Not showing " + content + ", matches skip keyword");
-				getItem(1);
+				getItem(increasing ? 1 : -1);
 				return;
 			}
 			List<HtmlAnchor> link = images.get(lastFetchedImage.get()).getByXPath(".//a");
@@ -145,11 +147,13 @@ public class JWSTComponent implements IMeuralImageSource {
 
 	@Override
 	public Optional<SourceItem> nextItem() {
+		increasing = true;
 		return getItem(1);
 	}
 
 	@Override
 	public Optional<SourceItem> prevItem() {
+		increasing = false;
 		return getItem(-1);
 	}
 
