@@ -58,11 +58,12 @@ public class JWSTComponentTest {
 		component.setPage(1);
 		component.setFetchedImageIndex(0);
 		assertTrue(component.prevItem().isPresent());
-		assertEquals(PAGE_SIZE - 1, component.getFetchedImageIndex());
+		assertTrue(10 < component.getFetchedImageIndex()); // Add some fluff here in case we've found
+		// some diagrams and skipped
 		component.setFetchedImageIndex(0);
 		component.setPage(3);
 		assertTrue(component.prevItem().isPresent());
-		assertEquals(PAGE_SIZE - 1, component.getFetchedImageIndex());
+		assertTrue(10 < component.getFetchedImageIndex());
 		assertEquals(2, component.getPage());
 	}
 
