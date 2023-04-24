@@ -56,7 +56,7 @@ public class MeuralComponent {
 		transformComponent = transform;
 	}
 
-	private String getToken() {
+	protected String getToken() {
 		if (token == null) {
 			logger.info("fetching service meural token");
 			try (Response response = OkHttpUtil.postSynchronous(
@@ -83,7 +83,7 @@ public class MeuralComponent {
 		return builder -> builder.addHeader("Authorization", "Token " + getToken());
 	}
 
-	private Device getDevice() throws IOException {
+	protected Device getDevice() throws IOException {
 		if (meuralDevice != null) {
 			return meuralDevice;
 		}
