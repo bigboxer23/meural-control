@@ -4,6 +4,7 @@ import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GooglePhotosComponent;
 import com.bigboxer23.utils.http.OkHttpUtil;
 import com.bigboxer23.utils.http.RequestBuilderCallback;
+import com.squareup.moshi.JsonEncodingException;
 import com.squareup.moshi.Moshi;
 import java.io.File;
 import java.io.IOException;
@@ -181,13 +182,18 @@ public class MeuralComponent {
 						.build(),
 				getAuthCallback())) {
 			String body = response.body().string();
-			MeuralItemResponse itemResponse =
-					moshi.adapter(MeuralItemResponse.class).fromJson(body);
-			if (itemResponse == null || itemResponse.getData() == null) {
-				logger.warn("cannot get item from body " + body);
-				throw new IOException("cannot get item from body " + body);
+			try {
+				MeuralItemResponse itemResponse =
+						moshi.adapter(MeuralItemResponse.class).fromJson(body);
+				if (itemResponse == null || itemResponse.getData() == null) {
+					logger.warn("cannot get item from body " + body);
+					throw new IOException("cannot get item from body " + body);
+				}
+				return itemResponse.getData();
+			} catch (JsonEncodingException e) {
+				logger.warn("uploadItemToMeural exception: " + body, e);
+				throw e;
 			}
-			return itemResponse.getData();
 		}
 	}
 
