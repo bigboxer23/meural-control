@@ -44,6 +44,7 @@ public class JWSTComponent implements IMeuralImageSource {
 			add("spectra");
 			add("light curve");
 			add("comparison");
+			add("compared");
 			add("compass");
 		}
 	};
@@ -62,11 +63,24 @@ public class JWSTComponent implements IMeuralImageSource {
 		fetchContent();
 	}
 
+	private boolean isFileSizeAcceptable(String text) {
+		boolean isSizeAcceptable = text.contains("kb")
+				|| (text.contains("mb")
+						&& Float.parseFloat(text.substring(text.lastIndexOf("(") + 1, text.lastIndexOf("mb") - 1))
+								< 100);
+		if (!isSizeAcceptable) {
+			logger.warn("file too large for display, " + text);
+		}
+		return isSizeAcceptable;
+	}
+
 	private Optional<SourceItem> findHighResLink(List<HtmlAnchor> anchors, String content) {
 		return anchors.stream()
 				.filter(anchor -> {
 					String text = anchor.getTextContent().toLowerCase();
-					return text.contains("full res") && (text.contains("png") || text.contains("jpg"));
+					return text.contains("full res")
+							&& (text.contains("png") || text.contains("jpg"))
+							&& isFileSizeAcceptable(text);
 				})
 				.findAny()
 				.map(anchor -> {
