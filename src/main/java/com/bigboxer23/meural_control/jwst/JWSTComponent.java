@@ -44,6 +44,7 @@ public class JWSTComponent implements IMeuralImageSource {
 			add("spectra");
 			add("light curve");
 			add("comparison");
+			add("compass");
 		}
 	};
 

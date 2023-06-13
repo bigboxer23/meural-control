@@ -4,11 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.bigboxer23.meural_control.data.Device;
 import com.bigboxer23.meural_control.data.MeuralPlaylist;
-import java.io.IOException;
-import java.util.Optional;
-
 import com.bigboxer23.meural_control.data.SourceItem;
 import com.bigboxer23.meural_control.google.GooglePhotosComponent;
+import java.io.IOException;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -77,8 +76,7 @@ public class MeuralComponentTest {
 	}
 
 	@Test
-	public void testPreview() throws IOException
-	{
+	public void testPreview() throws IOException {
 		Optional<SourceItem> item = photosComponent.nextItem();
 		assertTrue(item.isPresent());
 		component.previewItem(item.get(), true);
