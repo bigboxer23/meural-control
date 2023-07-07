@@ -97,9 +97,9 @@
       <version>2.0.13</version>
     </dependency>
     <dependency>
-      <groupId>net.sourceforge.htmlunit</groupId>
+      <groupId>org.htmlunit</groupId>
       <artifactId>htmlunit</artifactId>
-      <version>2.70.0</version>
+      <version>3.3.0</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
