@@ -1,0 +1,9 @@
+[Unit]
+Description=start meural server on boot
+After=multi-user.target
+[Service]
+WorkingDirectory=/home/pi/com/bigboxer23/meural-control/1.0/
+ExecStart=java -jar /home/pi/com/bigboxer23/meural-control/1.0/meural-control-1.0.jar
+User=pi
+[Install]
+WantedBy=multi-user.target

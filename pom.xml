@@ -207,8 +207,7 @@
             <configuration>
               <target>
                 <scp file="${project.basedir}/target/meural-control-1.0.jar" keyfile="${user.home}/.ssh/id_rsa" passphrase="" todir="pi@${host}:/home/pi/com/bigboxer23/meural-control/1.0" trust="true"/>
-                <sshexec command="sudo pkill -f 'java.*meural-control*'" host="${host}" keyfile="${user.home}/.ssh/id_rsa" trust="true" username="pi"/>
-                <sshexec command="cd /home/pi/com/bigboxer23/meural-control/1.0/ ;nohup java -jar /home/pi/com/bigboxer23/meural-control/1.0/meural-control-1.0.jar &amp;" host="${host}" keyfile="${user.home}/.ssh/id_rsa" trust="true" username="pi"/>
+                <sshexec command="sudo systemctl restart meural.service" host="${host}" keyfile="${user.home}/.ssh/id_rsa" trust="true" username="pi"/>
               </target>
             </configuration>
           </execution>
