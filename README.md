@@ -88,19 +88,16 @@ Swagger UI is available at `http://127.0.0.1:8081/swagger-ui/index.html`. It des
 ## Installation
 
 1) Run `install.sh`
-1) This is intended to be installed onto a raspberry pi or some other local server. `install.sh` will install it to a
-host of your choosing. The script needs to have the appropriate host variable set for where installation is desired.
-3) Google photos authentication
-1) When the app initially launches, it will print a URL to the console which needs to be navigated to and proper authorizations
-given. The browser this URL is launched in needs to be on the same machine as the meural-control is installed on. If that
-isn't possible (for headless installations for instance), it is possible to run the OAuth flow on a non-headless server and
-authenticate, and transfer the generated `tokens/StoredCredentials` to the appropriate directory on the remote headless machine.
-`install.sh` contains a commented line that does exactly this.
-5) Running on launch of server (assuming raspberry pi)
-1) Two lines need to be added to the `/etc/rc.local` file before `exit 0`
-1) ```
-cd /home/pi/com/bigboxer23/meural-control/1.0
-nohup java -jar /home/pi/com/bigboxer23/meural-control/1.0/meural-control-1.0.jar &
-7) Other
-1) Java needs to be available and installed (java 8+)
-1) On raspberry pi run `sudo apt install default-jdk`
+   1) This is intended to be installed onto a raspberry pi or some other local server. `install.sh` will install it to a
+   host of your choosing. The script needs to have the appropriate host variable set for where installation is desired.
+2) Google photos authentication
+   1) When the app initially launches, it will print a URL to the console which needs to be navigated to and proper authorizations
+   given. The browser this URL is launched in needs to be on the same machine as the meural-control is installed on. If that
+   isn't possible (for headless installations for instance), it is possible to run the OAuth flow on a non-headless server and
+   authenticate, and transfer the generated `tokens/StoredCredentials` to the appropriate directory on the remote headless machine.
+   `install.sh` contains a commented line that does exactly this.
+3) Running on start of server (assuming raspberry pi)
+   1) `sudo systemctl restart meural.service`
+4) Other
+   1) Java needs to be available and installed (java 17+)
+   2) On raspberry pi run `sudo apt install default-jdk`
