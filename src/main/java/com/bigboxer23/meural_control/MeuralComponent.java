@@ -187,6 +187,7 @@ public class MeuralComponent {
 						moshi.adapter(MeuralItemResponse.class).fromJson(body);
 				if (itemResponse == null || itemResponse.getData() == null) {
 					logger.warn("cannot get item from body " + body);
+					reset();
 					throw new IOException("cannot get item from body " + body);
 				}
 				return itemResponse.getData();
