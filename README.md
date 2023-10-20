@@ -86,13 +86,15 @@ second parameter is where the new file is saved. Leave blank to do nothing. Exam
 Swagger UI is available at `http://127.0.0.1:8081/swagger-ui/index.html`. It describes the webservice endpoints and allows usage directly in the browser.
 
 ## Installation
+
 1. There are some GitHub package dependencies.  GitHub requires maven authenticate as a valid user to fetch from their
-package repository.
+   package repository.
    - Create `~/.m2/settings.xml` if it does not exist
    - Create a GitHub personal access token if you do not have one (`settings` -> `developer settings` -> `tokens classic`)
    - In below example need to update `username` to your own GitHub username.  Update `password` to include your GitHub
-access token created in the previous step
-   - Example file: 
+     access token created in the previous step
+   - Example file:
+
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
