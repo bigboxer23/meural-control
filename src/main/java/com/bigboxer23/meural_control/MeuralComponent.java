@@ -29,8 +29,7 @@ public class MeuralComponent {
 
 	private final Moshi moshi = new Moshi.Builder().build();
 
-	@Value("${meural-api}")
-	private String apiUrl;
+	private static final String apiUrl = "https://api.meural.com/v0/";
 
 	@Value("${meural-account}")
 	private String username;
