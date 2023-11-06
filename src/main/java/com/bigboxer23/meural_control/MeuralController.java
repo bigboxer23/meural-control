@@ -223,7 +223,7 @@ public class MeuralController {
 	@GetMapping(value = "/getOpenAIPrompt", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(
 			summary = "Gets the prompt used to generate the images from OpenAI component",
-			description = "This prompt was last sent to OpenAI's Dall-e for image creation.")
+			description = "This prompt was last sent to OpenAI's Dall-e 3 for image creation.")
 	@ApiResponses({
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
@@ -261,7 +261,7 @@ public class MeuralController {
 	@PostMapping(value = "/changeSource", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(
 			summary = "Changes the source where new images are fetched from",
-			description = "Currently supported sources are from google photos, and from OpenAI Dall-e")
+			description = "Currently supported sources are from google photos, and from OpenAI Dall-e 3")
 	@ApiResponses({
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
@@ -271,8 +271,9 @@ public class MeuralController {
 				name = "source",
 				description = "ordinal to change backing sources.",
 				required = true,
-				example = "0=Google Photos Album, 1=OpenAI TextCompletion Dall-e, 2=OpenAI ChatGPT-3 "
-						+ " Dall-e, 3=OpenAI ChatGPT-4 Dall-e, 4=James Webb Space Telescope",
+				example = "0=Google Photos Album, 1=OpenAI TextCompletion Dall-e 3, 2=OpenAI"
+						+ " ChatGPT-3  Dall-e 3, 3=OpenAI ChatGPT-4 Dall-e 3, 4=James Webb"
+						+ " Space Telescope",
 				schema =
 						@Schema(
 								type = "string",
@@ -287,9 +288,9 @@ public class MeuralController {
 	@GetMapping(value = "/getCurrentSource", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(
 			summary = "Get the current source for content",
-			description = "Content source, 0 is google photos, 1 is openAI TextCompletion Dall-e, 2 is"
-					+ " OpenAI ChatGPT-3 Dall-e, 3 is OpenAI ChatGPT-4 Dall-e, 4 is James Webb"
-					+ " Space Telescope content")
+			description = "Content source, 0 is google photos, 1 is openAI TextCompletion Dall-e 3, 2 is"
+					+ " OpenAI ChatGPT-3 Dall-e, 3 is OpenAI ChatGPT-4 Dall-e 3, 4 is James"
+					+ " Webb Space Telescope content")
 	@ApiResponses({
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")

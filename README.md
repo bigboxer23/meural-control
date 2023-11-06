@@ -3,7 +3,7 @@
 # meural-control
 
 This project provides ability to push content to a Meural display from content sources not supported by the official software.
-Supported sources include <b>OpenAI TextCompletion -> Dall-e</b>, <b>OpenAI ChatGPT -> Dall-e</b>, a <b>Google Photos Album</b>,
+Supported sources include <b>OpenAI TextCompletion -> Dall-e 3</b>, <b>OpenAI ChatGPT -> Dall-e 3</b>, a <b>Google Photos Album</b>,
 <b>James Webb Space Telescope</b>, or an <b>external URL</b>. It provides a webserver and services with swagger documented endpoints
 that can be leveraged to control the Meural and push arbitrary content. The user/pw of the netgear account need to be provided,
 so we can fetch the Meural information and control it locally.
@@ -35,9 +35,9 @@ a token will be stored on the server so log-in is not necessary again (unless th
 Within the application.properties file, there is a required property, `gPhotos-albumTitle`, which defines the Google Photos album
 to push content from.
 
-### OpenAi (Dall-E)
+### OpenAi (Dall-E 3)
 
-This source allows using OpenAI's dall-e text to image generator to create custom images to display on the frame from a
+This source allows using OpenAI's dall-e 3 text to image generator to create custom images to display on the frame from a
 text prompt provided by the application.properties file or by updating the prompt used via rest endpoint. The prompt
 is fed into either the GPT-3 text completion or ChatGPT-3's (or ChatGPT-4's) chat completion with each new image request, so it slowly morphs
 over time to something different. The prompts are potentially saved with the file names if a gPhotos album name is defined
