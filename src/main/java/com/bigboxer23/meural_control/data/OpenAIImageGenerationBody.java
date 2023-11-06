@@ -9,7 +9,11 @@ public class OpenAIImageGenerationBody extends AbstractOpenAIBody {
 
 	private int n = 1;
 
-	private String size = "1024x1024";
+	private String size = "1024x1792";
+
+	private String model = "dall-e-3";
+
+	private String quality = "hd";
 
 	public OpenAIImageGenerationBody(String prompt, String user) {
 		super(user);
