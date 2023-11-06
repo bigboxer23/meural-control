@@ -62,7 +62,6 @@ directory with the additional .example suffix. It should contain a few propertie
 
 server.port:[<i>port for this application to run on. Example:8081</i>]<br>
 logbackserver=[<i>Optional IP/port for a logback server to get events. If not defined, modify `logback.xml` to log to stdout or a file. Example: 192.168.0.7:5671</i><br>
-meural-api=https://api.meural.com/v0/ <br>
 meural-account=[<i>your netgear acct email</i>]<br>
 meural-password=[<i>your netgear acct password</i>]<br>
 meural-playlist=[<i>What playlist should be used to push content to? If the playlist does not exist, it will be created.</i>]

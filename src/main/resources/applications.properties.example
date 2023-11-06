@@ -1,16 +1,27 @@
-server.port:8081
+#Server
+server.port=8081
+spring.lifecycle.timeout-per-shutdown-phase=5s
 logbackserver=192.168.0.xxx:5671
-meural-api=https://api.meural.com/v0/
+host=192.168.0.xxx
+
+#Meural
 meural-account=xxx@gmail.com
 meural-password=xxxxx
 meural-playlist=My Meural Playlist to put items in
 meural-orientation=vertical
-gPhotos-albumTitle=Art
-host=192.168.0.xxx
 scheduler-time=0 0 0/2 * * ?
+
+#Google Photos
+gPhotos-albumTitle=Art
+
+#OpenAI
 openai-key=xxx
 openai-prompt=astronaut cats orbiting around a planet in the style of van gogh
 openai-save-album=AI Art
+
+#James Webb Space Telescope
 jwst-save-album=James Webb Space Telescope
+
+#Misc
 transform-command=convert %s -crop 960x1440+0+0 %s
 transform-preview-commmand=convert %s -crop 960x1440+0+0 %s
