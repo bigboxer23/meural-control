@@ -15,6 +15,8 @@ public class OpenAIImageGenerationBody extends AbstractOpenAIBody {
 
 	private String quality = "hd";
 
+	private String style = "vivid";
+
 	public OpenAIImageGenerationBody(String prompt, String user) {
 		super(user);
 		this.prompt = prompt;
