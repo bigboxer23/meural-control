@@ -1,6 +1,7 @@
 package com.bigboxer23.meural_control.data;
 
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 /** */
 @Data
@@ -13,12 +14,14 @@ public class OpenAIImageGenerationBody extends AbstractOpenAIBody {
 
 	private String model = "dall-e-3";
 
-	private String quality = "hd";
+	private String quality;
 
-	private String style = "vivid";
+	private String style;
 
-	public OpenAIImageGenerationBody(String prompt, String user) {
+	public OpenAIImageGenerationBody(String prompt, String user, String style, String quality) {
 		super(user);
-		this.prompt = prompt;
+		setPrompt(prompt);
+		setStyle(StringUtils.defaultIfBlank(style, "vivid"));
+		setQuality(StringUtils.defaultIfBlank(quality, "hd"));
 	}
 }

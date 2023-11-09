@@ -13,10 +13,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -235,6 +239,59 @@ public class MeuralController {
 			response.setResponse(openAIComponent.getPrompt().orElse(""));
 			return response;
 		});
+	}
+
+	@GetMapping(value = "/getOpenAIInformation", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(
+			summary = "Get information that's being fed into Dall-e",
+			description = "This information was last sent to OpenAI's Dall-e 3 for image creation.")
+	@ApiResponses({
+		@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
+	})
+	public ResponseEntity<OpenAIInformation>  getOpenAIInformation() {
+		return new ResponseEntity<>(new OpenAIInformation(
+				openAIComponent.getPrompt().orElse(""),
+				StringUtils.defaultIfBlank(openAIComponent.getQuality(), "hd"),
+				StringUtils.defaultIfBlank(openAIComponent.getStyle(), "vivid")), HttpStatus.OK);
+	}
+
+	@PostMapping(value = "/changeOpenAIStyle", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(
+			summary = "Set the associated style used to generate the image")
+	@ApiResponses({
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
+	})
+	@Parameters({
+			@Parameter(
+					name = "style",
+					description = "style to generate image with, vivid or natural",
+					required = true,
+					example = "vivid | natural")
+	})
+	public ResponseEntity<Void> changeOpenAIStyle(String style) {
+		openAIComponent.setStyle(style);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@PostMapping(value = "/changeOpenAIQuality", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(
+			summary = "Set the associated quality used to generate the image")
+	@ApiResponses({
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_BAD_REQUEST + "", description = "Bad request"),
+			@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
+	})
+	@Parameters({
+			@Parameter(
+					name = "quality",
+					description = "style to generate image with, hd or standard",
+					required = true,
+					example = "hd | standard")
+	})
+	public ResponseEntity<Void> changeOpenAIQuality(String quality) {
+		openAIComponent.setQuality(quality);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	@PostMapping(value = "/changeGooglePhotosAlbum", produces = MediaType.APPLICATION_JSON_VALUE)
