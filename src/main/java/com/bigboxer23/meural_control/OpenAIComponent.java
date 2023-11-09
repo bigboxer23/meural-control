@@ -42,6 +42,10 @@ public class OpenAIComponent implements IMeuralImageSource {
 
 	private int mode;
 
+	private final FilePersistedString style = new FilePersistedString("dalleStyle");
+
+	private final FilePersistedString quality = new FilePersistedString("dalleQuality");
+
 	public OpenAIComponent(Environment env, GoogleCalendarComponent gCalendarComp) {
 		this.env = env;
 		if (lastPrompt.get().isBlank()) {
@@ -78,7 +82,10 @@ public class OpenAIComponent implements IMeuralImageSource {
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAIImageGenerationBody.class)
 						.toJson(new OpenAIImageGenerationBody(
-								lastPrompt.get() + gCalendarComponent.getHolidayString(), user)),
+								lastPrompt.get() + gCalendarComponent.getHolidayString(),
+								user,
+								style.get(),
+								quality.get())),
 				JSON);
 		try (Response response = getRequest("v1/images/generations", body)) {
 			if (response.isSuccessful()) {
@@ -186,5 +193,21 @@ public class OpenAIComponent implements IMeuralImageSource {
 
 	public void setMode(int theMode) {
 		mode = theMode;
+	}
+
+	public void setStyle(String style) {
+		this.style.set(style);
+	}
+
+	public void setQuality(String quality) {
+		this.quality.set(quality);
+	}
+
+	public String getQuality() {
+		return quality.get();
+	}
+
+	public String getStyle() {
+		return style.get();
 	}
 }
