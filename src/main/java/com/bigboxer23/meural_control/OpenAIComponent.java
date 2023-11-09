@@ -196,10 +196,12 @@ public class OpenAIComponent implements IMeuralImageSource {
 	}
 
 	public void setStyle(String style) {
+		logger.info("setting style to " + style);
 		this.style.set(style);
 	}
 
 	public void setQuality(String quality) {
+		logger.info("setting quality to " + quality);
 		this.quality.set(quality);
 	}
 
