@@ -3,6 +3,7 @@ package com.bigboxer23.meural_control;
 import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GooglePhotosComponent;
 import com.bigboxer23.meural_control.jwst.JWSTComponent;
+import com.bigboxer23.utils.command.Command;
 import com.bigboxer23.utils.file.FilePersistentIndex;
 import java.io.IOException;
 import java.util.Optional;

@@ -2,6 +2,7 @@ package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GooglePhotosComponent;
+import com.bigboxer23.utils.command.Command;
 import com.bigboxer23.utils.http.OkHttpUtil;
 import com.bigboxer23.utils.http.RequestBuilderCallback;
 import com.squareup.moshi.JsonEncodingException;
