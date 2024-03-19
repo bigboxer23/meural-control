@@ -6,6 +6,6 @@ import lombok.Data;
 /** Meural response JSON for returning boolean response */
 @Data
 public class MeuralStatusResponse extends MeuralResponse {
-	@Schema(description = "Give status data, true or false", required = true)
+	@Schema(description = "Give status data, true or false", requiredMode = Schema.RequiredMode.REQUIRED)
 	private boolean response;
 }

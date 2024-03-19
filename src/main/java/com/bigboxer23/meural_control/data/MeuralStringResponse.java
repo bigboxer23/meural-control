@@ -8,7 +8,7 @@ import lombok.Data;
 public class MeuralStringResponse extends MeuralResponse {
 	@Schema(
 			description = "Gives more specific reason request is successful or fails",
-			required = true,
+			requiredMode = Schema.RequiredMode.REQUIRED,
 			example = "Unsupported file format uploaded")
 	private String response;
 }
