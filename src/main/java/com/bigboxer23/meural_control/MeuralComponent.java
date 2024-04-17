@@ -6,7 +6,6 @@ import com.bigboxer23.utils.command.Command;
 import com.bigboxer23.utils.http.OkHttpUtil;
 import com.bigboxer23.utils.http.RequestBuilderCallback;
 import com.squareup.moshi.JsonEncodingException;
-import com.squareup.moshi.Moshi;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,8 +26,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class MeuralComponent {
 	private static final Logger logger = LoggerFactory.getLogger(MeuralComponent.class);
-
-	private final Moshi moshi = new Moshi.Builder().build();
 
 	private static final String apiUrl = "https://api.meural.com/v0/";
 
@@ -67,12 +64,7 @@ public class MeuralComponent {
 							.add("password", password)
 							.build(),
 					null)) {
-				if (!response.isSuccessful()) {
-					throw new IOException(response.message());
-				}
-				token = moshi.adapter(Token.class)
-						.fromJson(response.body().string())
-						.getToken();
+				token = OkHttpUtil.getNonEmptyBody(response, Token.class).getToken();
 			} catch (IOException e) {
 				logger.error("getToken", e);
 			}
@@ -91,15 +83,10 @@ public class MeuralComponent {
 		logger.info("fetching device info from meural service");
 		try (Response response =
 				OkHttpUtil.getSynchronous(apiUrl + "user/devices?count=10&page=1", getAuthCallback())) {
-			if (!response.isSuccessful()) {
-				logger.warn("Cannot get device " + response.code());
-				throw new IOException("Cannot get device " + response.code());
-			}
-			String body = response.body().string();
-			Devices devices = moshi.adapter(Devices.class).fromJson(body);
+			Devices devices = OkHttpUtil.getNonEmptyBody(response, Devices.class);
 			if (devices == null || devices.getData() == null || devices.getData().length == 0) {
-				logger.warn("cannot get device from body " + body);
-				throw new IOException("cannot get device from body " + body);
+				logger.warn("cannot get device from body ");
+				throw new IOException("cannot get device from body ");
 			}
 			meuralDevice = devices.getData()[0];
 			return meuralDevice;
@@ -181,18 +168,17 @@ public class MeuralComponent {
 								RequestBody.create(sourceItem.getTempFile(), getMediaType(sourceItem.getTempFile())))
 						.build(),
 				getAuthCallback())) {
-			String body = response.body().string();
+
 			try {
-				MeuralItemResponse itemResponse =
-						moshi.adapter(MeuralItemResponse.class).fromJson(body);
+				MeuralItemResponse itemResponse = OkHttpUtil.getNonEmptyBody(response, MeuralItemResponse.class);
 				if (itemResponse == null || itemResponse.getData() == null) {
-					logger.warn("cannot get item from body " + body);
+					logger.warn("cannot get item from body ");
 					reset();
-					throw new IOException("cannot get item from body " + body);
+					throw new IOException("cannot get item from body ");
 				}
 				return itemResponse.getData();
 			} catch (JsonEncodingException e) {
-				logger.warn("uploadItemToMeural exception: " + body, e);
+				logger.warn("uploadItemToMeural exception: ", e);
 				throw e;
 			}
 		}
@@ -202,12 +188,10 @@ public class MeuralComponent {
 		logger.info("get playlist info for \"" + playlistName + "\"");
 		try (Response response =
 				OkHttpUtil.getSynchronous(apiUrl + "user/galleries?count=10&page=1", getAuthCallback())) {
-			String body = response.body().string();
-			MeuralPlaylists meuralPlaylists =
-					moshi.adapter(MeuralPlaylists.class).fromJson(body);
+			MeuralPlaylists meuralPlaylists = OkHttpUtil.getNonEmptyBody(response, MeuralPlaylists.class);
 			if (meuralPlaylists == null || meuralPlaylists.getData() == null || meuralPlaylists.getData().length == 0) {
-				logger.warn("cannot get playlists from body " + body);
-				throw new IOException("cannot get playlists from body " + body);
+				logger.warn("cannot get playlists from body ");
+				throw new IOException("cannot get playlists from body ");
 			}
 			MeuralPlaylist playlist = Arrays.stream(meuralPlaylists.getData())
 					.filter(theMeuralPlaylist -> playlistName.equalsIgnoreCase(theMeuralPlaylist.getName()))
@@ -236,12 +220,11 @@ public class MeuralComponent {
 						.add("orientation", meuralOrientation)
 						.build(),
 				getAuthCallback())) {
-			String body = response.body().string();
 			MeuralPlaylistResponse playlistResponse =
-					moshi.adapter(MeuralPlaylistResponse.class).fromJson(body);
+					OkHttpUtil.getNonEmptyBody(response, MeuralPlaylistResponse.class);
 			if (playlistResponse == null || playlistResponse.getData() == null) {
-				logger.warn("cannot create playlist from body " + body);
-				throw new IOException("cannot create playlist from body " + body);
+				logger.warn("cannot create playlist from body ");
+				throw new IOException("cannot create playlist from body ");
 			}
 			return playlistResponse.getData();
 		}
@@ -355,12 +338,7 @@ public class MeuralComponent {
 						.addFormDataPart("photo", "1", RequestBody.create(file, getMediaType(file)))
 						.build(),
 				null)) {
-			MeuralStringResponse meuralResponse = moshi.adapter(MeuralStringResponse.class)
-					.fromJson(response.body().string());
-			if (!meuralResponse.isSuccessful()) {
-				logger.warn("failure to change " + meuralResponse.getResponse());
-			}
-			return meuralResponse;
+			return OkHttpUtil.getNonEmptyBody(response, MeuralStringResponse.class);
 		}
 	}
 
@@ -390,9 +368,9 @@ public class MeuralComponent {
 		return doRequest("/remote/control_command/set_key/down", MeuralStringResponse.class);
 	}
 
-	private <T extends MeuralResponse> T doRequest(String command, Class<T> theResult) throws IOException {
+	private <T extends MeuralResponse> T doRequest(String command, Class<T> clazz) throws IOException {
 		try (Response response = OkHttpUtil.getSynchronous(getDeviceURL() + command, null)) {
-			return moshi.adapter(theResult).fromJson(response.body().string());
+			return OkHttpUtil.getNonEmptyBody(response, clazz);
 		}
 	}
 
