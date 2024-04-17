@@ -89,8 +89,8 @@ public class OpenAIComponent implements IMeuralImageSource {
 				JSON);
 		try (Response response = getRequest("v1/images/generations", body)) {
 			if (response.isSuccessful()) {
-				OpenAIImageGenerationResponse openAIResponse = moshi.adapter(OpenAIImageGenerationResponse.class)
-						.fromJson(response.body().string());
+				OpenAIImageGenerationResponse openAIResponse =
+						OkHttpUtil.getNonEmptyBody(response, OpenAIImageGenerationResponse.class);
 				if (openAIResponse.getData().length > 0) {
 					return Optional.of(new SourceItem(
 							lastPrompt.get() + gCalendarComponent.getHolidayString() + ".png",
@@ -98,7 +98,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 							albumToSaveTo));
 				}
 			} else {
-				resetPrompt(response.body().string(), response.code());
+				resetPrompt(response.message(), response.code());
 			}
 		} catch (IOException e) {
 			logger.warn("generateItem", e);
@@ -126,9 +126,8 @@ public class OpenAIComponent implements IMeuralImageSource {
 				JSON);
 		try (Response response = getRequest("v1/chat/completions", body)) {
 			if (response.isSuccessful()) {
-				String bodyContent = response.body().string();
 				OpenAICompletionResponse openAIResponse =
-						moshi.adapter(OpenAICompletionResponse.class).fromJson(bodyContent);
+						OkHttpUtil.getNonEmptyBody(response, OpenAICompletionResponse.class);
 				if (openAIResponse != null && openAIResponse.getChoices().length > 0) {
 					String text = openAIResponse
 							.getChoices()[0]
@@ -155,14 +154,13 @@ public class OpenAIComponent implements IMeuralImageSource {
 				JSON);
 		try (Response response = getRequest("v1/completions", body)) {
 			if (response.isSuccessful()) {
-				String bodyContent = response.body().string();
 				OpenAICompletionResponse openAIResponse =
-						moshi.adapter(OpenAICompletionResponse.class).fromJson(bodyContent);
+						OkHttpUtil.getNonEmptyBody(response, OpenAICompletionResponse.class);
 				if (openAIResponse != null && openAIResponse.getChoices().length > 0) {
 					String text = openAIResponse.getChoices()[0].getText().trim();
 					if (lastPrompt.get().equals(text) || text.split(" ").length < 6) {
 						if (!shouldRetry && !lastPrompt.get().equalsIgnoreCase(env.getProperty("openai-prompt"))) {
-							resetPrompt(bodyContent, response.code());
+							resetPrompt(response.message(), response.code());
 							shouldRetry = true;
 						}
 						throw new IOException(text + " is not complex enough, trying again");
