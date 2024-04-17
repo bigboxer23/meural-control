@@ -38,12 +38,4 @@ public class OpenAIComponentTest {
 		assertNotNull(item.get().getUrl());
 		assertNotEquals(prompt, component.getPrompt().get());
 	}
-
-	@Value("${openai-key}")
-	private String apiKey;
-
-	@Value("${meural-account}")
-	private String user;
-
-	private final Moshi moshi = new Moshi.Builder().build();
 }
