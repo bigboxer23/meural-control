@@ -46,31 +46,4 @@ public class OpenAIComponentTest {
 	private String user;
 
 	private final Moshi moshi = new Moshi.Builder().build();
-
-	@Test
-	public void tmp() {
-		RequestBody body = RequestBody.create(
-				moshi.adapter(OpenAIImageGenerationBody.class)
-						.toJson(new OpenAIImageGenerationBody(
-								"generate an image of barbies dressed like the" + " village people",
-								user,
-								"vivid",
-								"hd")),
-				MediaType.parse("application/json; charset=utf-8"));
-		try (Response response = OkHttpUtil.postSynchronous(
-				"https://api.openai.com/v1/images/generations", body, builder -> builder.header(
-								"Content-Type", "application/json")
-						.header("Authorization", "Bearer " + apiKey))) {
-			if (response.isSuccessful()) {
-				OpenAIImageGenerationResponse openAIResponse = moshi.adapter(OpenAIImageGenerationResponse.class)
-						.fromJson(response.body().string());
-				if (openAIResponse.getData().length > 0) {
-					System.out.println(openAIResponse.getData()[0].getUrl());
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			// logger.warn("generateItem", e);
-		}
-	}
 }
