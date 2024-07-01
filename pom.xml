@@ -210,8 +210,15 @@
             <phase>package</phase>
             <configuration>
               <target>
-                <scp file="${project.basedir}/target/meural-control-1.0.jar" keyfile="${user.home}/.ssh/id_rsa" passphrase="" todir="pi@${host}:/home/pi/com/bigboxer23/meural-control/1.0" trust="true"/>
-                <sshexec command="sudo systemctl restart meural.service" host="${host}" keyfile="${user.home}/.ssh/id_rsa" trust="true" username="pi"/>
+                <exec executable="scp">
+                  <arg value="target/meural-control-1.0.jar"/>
+                  <arg value="pi@${host}:/home/pi/com/bigboxer23/meural-control/1.0"/>
+                </exec>
+                <exec executable="ssh">
+                  <arg value="-tt"/>
+                  <arg value="pi@${host}"/>
+                  <arg value="sudo systemctl restart meural.service"/>
+                </exec>
               </target>
             </configuration>
           </execution>
