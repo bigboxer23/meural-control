@@ -2,10 +2,17 @@
 # package ecosystems to update and where the package manifests are located.
 # Please see the documentation for all configuration options:
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
 version: 2
+registries:
+  maven-github:
+    type: maven-repository
+    url: https://maven.pkg.github.com/bigboxer23
+    username: bigboxer23
+    password: ${{secrets.GH_PAT_FOR_ACTIONS_TOKEN}}
 updates:
   - package-ecosystem: "maven" # See documentation for possible values
     directory: "/" # Location of package manifests
+    registries:
+      - maven-github
     schedule:
       interval: "weekly"
