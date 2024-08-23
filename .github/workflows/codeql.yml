@@ -13,8 +13,6 @@ name: "CodeQL"
 
 on:
   pull_request_target:
-  schedule:
-    -   cron: '16 5 * * 0'
 
 jobs:
   analyze:
@@ -46,7 +44,7 @@ jobs:
         java-version: 17.0
         distribution: 'adopt'
     -   name: maven-settings
-        uses: s4u/maven-settings-action@v2.8.0
+        uses: s4u/maven-settings-action@v3.0.0
         with:
           servers: '[{"id": "github", "username": "dummy", "password": "${GITHUB_TOKEN_REF}"}]'
           githubServer: false
@@ -56,6 +54,6 @@ jobs:
           GITHUB_TOKEN_REF: ${{ secrets.GH_PAT_FOR_ACTIONS_TOKEN }}
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
