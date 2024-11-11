@@ -61,8 +61,9 @@ public class SchedulerComponent {
 						api.previewItem(url, false);
 						url.setCleanupTempFile(true);
 						return api.changePicture(url);
-					} catch (IOException theE) {
-						logger.warn("doAction", theE);
+					} catch (IOException e) {
+						logger.warn("doAction", e);
+						api.reset();
 						return new MeuralResponse();
 					}
 				})

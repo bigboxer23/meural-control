@@ -296,6 +296,7 @@ public class MeuralComponent {
 
 	/** Cause a re-fetch of all meural device information on next request */
 	public void reset() {
+		logger.warn("resetting api");
 		token = null;
 		meuralDevice = null;
 	}
