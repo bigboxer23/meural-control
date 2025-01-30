@@ -5,16 +5,14 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /** Component to interrogate a Google calendar for holiday information */
+@Slf4j
 @Component
 public class GoogleCalendarComponent {
-	private static final Logger logger = LoggerFactory.getLogger(GoogleCalendarComponent.class);
-
 	private final GoogleAPICredentialProvider credentialProviderComponent;
 
 	private String holidayString;
@@ -26,7 +24,7 @@ public class GoogleCalendarComponent {
 
 	@Scheduled(cron = "0 0 0 ? * *") // Run every day at 12am
 	public void updateHoliday() {
-		logger.info("Fetching holiday information");
+		log.info("Fetching holiday information");
 		try {
 			holidayString = "";
 			Calendar aCalendar = new Calendar.Builder(
@@ -48,9 +46,9 @@ public class GoogleCalendarComponent {
 					.stream()
 					.findAny()
 					.ifPresent(event -> holidayString = " with elements of " + event.getSummary());
-			logger.info("holiday string:" + holidayString);
+			log.info("holiday string:" + holidayString);
 		} catch (GeneralSecurityException | IOException e) {
-			logger.warn("updateHoliday", e);
+			log.warn("updateHoliday", e);
 		}
 	}
 

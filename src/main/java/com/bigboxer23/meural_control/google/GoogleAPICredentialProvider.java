@@ -20,18 +20,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /** */
+@Slf4j
 @Component
 public class GoogleAPICredentialProvider {
 	private CredentialsProvider credProvider;
 
 	private Credential credential;
-
-	private static final Logger logger = LoggerFactory.getLogger(GoogleAPICredentialProvider.class);
 
 	private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
@@ -46,7 +44,7 @@ public class GoogleAPICredentialProvider {
 
 	public CredentialsProvider getCredentialProvider() throws IOException, GeneralSecurityException {
 		if (credProvider == null) {
-			logger.info("Fetching Google creds");
+			log.info("Fetching Google creds");
 			InputStream aCredStream = Credentials.class.getResourceAsStream("/credentials.json");
 			GoogleClientSecrets aClientSecrets =
 					GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(aCredStream));
@@ -55,7 +53,7 @@ public class GoogleAPICredentialProvider {
 					.setDataStoreFactory(new FileDataStoreFactory(new java.io.File("tokens")))
 					.setAccessType("offline")
 					.build();
-			logger.info("Starting local server receiver");
+			log.info("Starting local server receiver");
 			credential = new AuthorizationCodeInstalledApp(
 							aFlow,
 							new LocalServerReceiver.Builder().setPort(8890).build())

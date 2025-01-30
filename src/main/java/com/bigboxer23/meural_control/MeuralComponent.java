@@ -14,20 +14,18 @@ import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /** */
+@Slf4j
 @Component
 public class MeuralComponent {
-	private static final Logger logger = LoggerFactory.getLogger(MeuralComponent.class);
-
 	private static final String apiUrl = "https://api.meural.com/v0/";
 
 	@Value("${meural-account}")
@@ -57,7 +55,7 @@ public class MeuralComponent {
 
 	protected String getToken() {
 		if (token == null) {
-			logger.info("fetching service meural token");
+			log.info("fetching service meural token");
 			try (Response response = OkHttpUtil.postSynchronous(
 					apiUrl + "authenticate",
 					new FormBody.Builder()
@@ -67,7 +65,7 @@ public class MeuralComponent {
 					null)) {
 				token = OkHttpUtil.getNonEmptyBody(response, Token.class).getToken();
 			} catch (IOException e) {
-				logger.error("getToken", e);
+				log.error("getToken", e);
 			}
 		}
 		return token;
@@ -81,12 +79,12 @@ public class MeuralComponent {
 		if (meuralDevice != null) {
 			return meuralDevice;
 		}
-		logger.info("fetching device info from meural service");
+		log.info("fetching device info from meural service");
 		try (Response response =
 				OkHttpUtil.getSynchronous(apiUrl + "user/devices?count=10&page=1", getAuthCallback())) {
 			Devices devices = OkHttpUtil.getNonEmptyBody(response, Devices.class);
 			if (devices == null || devices.getData() == null || devices.getData().length == 0) {
-				logger.warn("cannot get device from body ");
+				log.warn("cannot get device from body ");
 				throw new IOException("cannot get device from body ");
 			}
 			meuralDevice = devices.getData()[0];
@@ -95,7 +93,7 @@ public class MeuralComponent {
 	}
 
 	private MeuralStringResponse addItemToPlaylistAndDisplay(SourceItem sourceItem) throws IOException {
-		logger.info("starting add new file to playlist: \"" + sourceItem.getName() + "\"");
+		log.info("starting add new file to playlist: \"" + sourceItem.getName() + "\"");
 		MeuralItem item = uploadItemToMeural(sourceItem);
 		MeuralPlaylist playlist = getOrCreatePlaylist();
 		// Check if we already had this item in the playlist. If we did, no need to do anything
@@ -104,14 +102,14 @@ public class MeuralComponent {
 			deleteItemsFromPlaylist(playlist);
 			addPlaylistToDevice(getDevice().getId(), playlist.getId());
 		}
-		logger.info("completed adding new file to playlist: \"" + sourceItem.getName() + "\"");
+		log.info("completed adding new file to playlist: \"" + sourceItem.getName() + "\"");
 		MeuralStringResponse response = new MeuralStringResponse();
 		response.setStatus("pass");
 		return response;
 	}
 
 	private void addPlaylistToDevice(String deviceId, String playlistId) throws IOException {
-		logger.info("Adding playlist to Meural " + deviceId + ":" + playlistId);
+		log.info("Adding playlist to Meural " + deviceId + ":" + playlistId);
 		RetryingCommand.execute(
 				() -> {
 					try (Response response = OkHttpUtil.postSynchronous(
@@ -127,14 +125,14 @@ public class MeuralComponent {
 	}
 
 	private void deleteItemsFromPlaylist(MeuralPlaylist playlist) throws IOException {
-		logger.info("deleting items from playlist " + playlist.getId());
+		log.info("deleting items from playlist " + playlist.getId());
 		for (Integer item : playlist.getItemIds()) {
 			deleteItem(item);
 		}
 	}
 
 	private void deleteItem(Integer itemId) throws IOException {
-		logger.info("deleting item: " + itemId);
+		log.info("deleting item: " + itemId);
 		RetryingCommand.execute(
 				() -> {
 					try (Response response =
@@ -150,7 +148,7 @@ public class MeuralComponent {
 	}
 
 	private void addItemToPlaylist(String playlistId, String itemId) throws IOException {
-		logger.info("adding item to playlist " + playlistId + ":" + itemId);
+		log.info("adding item to playlist " + playlistId + ":" + itemId);
 		RetryingCommand.execute(
 				() -> {
 					try (Response response = OkHttpUtil.postSynchronous(
@@ -174,7 +172,7 @@ public class MeuralComponent {
 
 	private MeuralItem uploadItemToMeural(SourceItem sourceItem) throws IOException {
 		sourceItem.setTempFile(transformComponent.transformItem(sourceItem.getTempFile()));
-		logger.info("uploading file to Meural service \"" + sourceItem.getName() + "\"");
+		log.info("uploading file to Meural service \"" + sourceItem.getName() + "\"");
 		try (Response response = OkHttpUtil.postSynchronous(
 				apiUrl + "items",
 				new MultipartBody.Builder()
@@ -189,20 +187,20 @@ public class MeuralComponent {
 			try {
 				MeuralItemResponse itemResponse = OkHttpUtil.getNonEmptyBody(response, MeuralItemResponse.class);
 				if (itemResponse == null || itemResponse.getData() == null) {
-					logger.warn("cannot get item from body ");
+					log.warn("cannot get item from body ");
 					reset();
 					throw new IOException("cannot get item from body ");
 				}
 				return itemResponse.getData();
 			} catch (JsonEncodingException e) {
-				logger.warn("uploadItemToMeural exception: ", e);
+				log.warn("uploadItemToMeural exception: ", e);
 				throw e;
 			}
 		}
 	}
 
 	protected MeuralPlaylist getOrCreatePlaylist() throws IOException {
-		logger.info("get playlist info for \"" + playlistName + "\"");
+		log.info("get playlist info for \"" + playlistName + "\"");
 		return RetryingCommand.execute(
 				() -> {
 					try (Response response =
@@ -211,7 +209,7 @@ public class MeuralComponent {
 						if (meuralPlaylists == null
 								|| meuralPlaylists.getData() == null
 								|| meuralPlaylists.getData().length == 0) {
-							logger.warn("cannot get playlists from body ");
+							log.warn("cannot get playlists from body ");
 							throw new IOException("cannot get playlists from body ");
 						}
 						MeuralPlaylist playlist = Arrays.stream(meuralPlaylists.getData())
@@ -221,7 +219,7 @@ public class MeuralComponent {
 									try {
 										return createPlaylist(playlistName);
 									} catch (IOException e) {
-										logger.warn("orElseGet", e);
+										log.warn("orElseGet", e);
 										return null;
 									}
 								});
@@ -236,7 +234,7 @@ public class MeuralComponent {
 	}
 
 	protected MeuralPlaylist createPlaylist(String name) throws IOException {
-		logger.info("Creating playlist for " + name);
+		log.info("Creating playlist for " + name);
 		return RetryingCommand.execute(
 				() -> {
 					try (Response response = OkHttpUtil.postSynchronous(
@@ -249,7 +247,7 @@ public class MeuralComponent {
 						MeuralPlaylistResponse playlistResponse =
 								OkHttpUtil.getNonEmptyBody(response, MeuralPlaylistResponse.class);
 						if (playlistResponse == null || playlistResponse.getData() == null) {
-							logger.warn("cannot create playlist from body ");
+							log.warn("cannot create playlist from body ");
 							throw new IOException("cannot create playlist from body ");
 						}
 						return playlistResponse.getData();
@@ -259,13 +257,13 @@ public class MeuralComponent {
 	}
 
 	protected void deletePlaylist(String playlistId) throws IOException {
-		logger.info("deleting playlist for " + playlistId);
+		log.info("deleting playlist for " + playlistId);
 		RetryingCommand.execute(
 				() -> {
 					try (Response response =
 							OkHttpUtil.deleteSynchronous(apiUrl + "galleries/" + playlistId, getAuthCallback())) {
 						if (!response.isSuccessful()) {
-							logger.warn("cannot delete playlist "
+							log.warn("cannot delete playlist "
 									+ playlistId
 									+ ", body: "
 									+ response.body().string());
@@ -296,7 +294,7 @@ public class MeuralComponent {
 
 	/** Cause a re-fetch of all meural device information on next request */
 	public void reset() {
-		logger.warn("resetting api");
+		log.warn("resetting api");
 		token = null;
 		meuralDevice = null;
 	}
@@ -310,7 +308,7 @@ public class MeuralComponent {
 				if (item.getAlbumToSaveTo() != null && item.getAlbumToSaveTo().length() > 0) {
 					gPhotos.uploadItemToAlbum(item);
 				}
-				logger.info("removing temp file: \"" + item.getName() + "\"");
+				log.info("removing temp file: \"" + item.getName() + "\"");
 				item.getTempFile().delete();
 			}
 		}
@@ -319,10 +317,10 @@ public class MeuralComponent {
 	public MeuralStringResponse fetchItem(SourceItem item, Command<MeuralStringResponse> command) throws IOException {
 		// If temp file is set and exists, don't fetch it again.
 		if (item.getTempFile() != null && item.getTempFile().exists()) {
-			logger.info("item exists, not re-downloading \"" + item.getName() + "\"");
+			log.info("item exists, not re-downloading \"" + item.getName() + "\"");
 			return executeAfterFetchCommand(item, command);
 		}
-		logger.info("downloading item for \"" + item.getName() + "\"");
+		log.info("downloading item for \"" + item.getName() + "\"");
 		String extension = FilenameUtils.getExtension(
 				item.getName() != null
 						? item.getName()
@@ -366,7 +364,7 @@ public class MeuralComponent {
 			tmpFile = transformComponent.transformPreviewItem(tmpFile);
 		}
 		File file = tmpFile;
-		logger.info("previewing directly on meural \"" + item.getName() + "\"");
+		log.info("previewing directly on meural \"" + item.getName() + "\"");
 		return RetryingCommand.execute(
 				() -> {
 					try (Response response = OkHttpUtil.postSynchronous(

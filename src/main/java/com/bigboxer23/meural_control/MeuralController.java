@@ -14,9 +14,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /** */
+@Slf4j
 @RestController
 @Tag(
 		name = "Meural Control Service",
@@ -37,8 +37,6 @@ public class MeuralController {
 	private final OpenAIComponent openAIComponent;
 
 	private final GooglePhotosComponent gPhotosAPI;
-
-	private static final Logger logger = LoggerFactory.getLogger(MeuralController.class);
 
 	public MeuralController(
 			MeuralComponent api,
@@ -59,7 +57,7 @@ public class MeuralController {
 			}
 			return (T) response;
 		} catch (IOException theE) {
-			logger.warn("handleResponse", theE);
+			log.warn("handleResponse", theE);
 			api.reset();
 			servletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
 			return (T) new MeuralResponse();
@@ -86,7 +84,7 @@ public class MeuralController {
 						"https://res.cloudinary.com/dk-find-out/image/upload/q_80,w_1440,f_auto/DCTM_Penguin_UK_DK_AL316928_wsfijk.jpg")
 	})
 	public MeuralStringResponse displayContentFromUrl(String url, HttpServletResponse servletResponse) {
-		logger.warn("change display to: " + url);
+		log.warn("change display to: " + url);
 		return handleResponse(servletResponse, () -> api.changePicture(new SourceItem(null, new URL(url))));
 	}
 
@@ -113,7 +111,7 @@ public class MeuralController {
 						"https://res.cloudinary.com/dk-find-out/image/upload/q_80,w_1440,f_auto/DCTM_Penguin_UK_DK_AL316928_wsfijk.jpg")
 	})
 	public MeuralStringResponse previewContentFromUrl(String url, HttpServletResponse servletResponse) {
-		logger.warn("previewing: " + url);
+		log.warn("previewing: " + url);
 		return handleResponse(servletResponse, () -> api.previewItem(new SourceItem(null, new URL(url)), true));
 	}
 

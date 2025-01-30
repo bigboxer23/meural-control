@@ -8,19 +8,17 @@ import com.squareup.moshi.Moshi;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 /** component that calls OpenAI's image generation API to generate an image from the text prompt */
+@Slf4j
 @Component
 public class OpenAIComponent implements IMeuralImageSource {
-	private static final Logger logger = LoggerFactory.getLogger(OpenAIComponent.class);
-
 	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
 	@Value("${openai-key}")
@@ -75,7 +73,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 		} else if (mode == 2 || mode == 3) {
 			generateNewPrompt().ifPresent(this::updatePrompt);
 		}
-		logger.info("Requesting generated image for prompt: \""
+		log.info("Requesting generated image for prompt: \""
 				+ lastPrompt.get()
 				+ gCalendarComponent.getHolidayString()
 				+ "\"");
@@ -101,13 +99,13 @@ public class OpenAIComponent implements IMeuralImageSource {
 				resetPrompt(response.message(), response.code());
 			}
 		} catch (IOException e) {
-			logger.warn("generateItem", e);
+			log.warn("generateItem", e);
 		}
 		return Optional.empty();
 	}
 
 	private void resetPrompt(String body, int code) {
-		logger.warn("request was not successful for "
+		log.warn("request was not successful for "
 				+ lastPrompt.get()
 				+ gCalendarComponent.getHolidayString()
 				+ ". "
@@ -118,7 +116,7 @@ public class OpenAIComponent implements IMeuralImageSource {
 	}
 
 	protected Optional<String> generateNewPrompt() {
-		logger.info("Requesting generated prompt: \"" + lastPrompt.get() + "\"");
+		log.info("Requesting generated prompt: \"" + lastPrompt.get() + "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAIChatCompletionBody.class)
 						.toJson(new OpenAIChatCompletionBody(
@@ -134,19 +132,19 @@ public class OpenAIComponent implements IMeuralImageSource {
 							.getMessage()
 							.getContent()
 							.trim();
-					logger.info("new prompt generated: \"" + text + "\"");
+					log.info("new prompt generated: \"" + text + "\"");
 					return Optional.of(text);
 				}
 			}
 		} catch (IOException e) {
-			logger.warn("generateNewPrompt", e);
+			log.warn("generateNewPrompt", e);
 		}
-		logger.warn("generated empty suggestion");
+		log.warn("generated empty suggestion");
 		return Optional.empty();
 	}
 
 	private Optional<String> generateNewPromptTextCompletion(boolean shouldRetry) {
-		logger.info("Requesting generated prompt: \"" + lastPrompt.get() + "\"");
+		log.info("Requesting generated prompt: \"" + lastPrompt.get() + "\"");
 		RequestBody body = RequestBody.create(
 				moshi.adapter(OpenAICompletionBody.class)
 						.toJson(new OpenAICompletionBody(
@@ -165,17 +163,17 @@ public class OpenAIComponent implements IMeuralImageSource {
 						}
 						throw new IOException(text + " is not complex enough, trying again");
 					}
-					logger.info("new prompt generated: \"" + text + "\"");
+					log.info("new prompt generated: \"" + text + "\"");
 					return Optional.of(text);
 				}
 			}
 		} catch (IOException e) {
-			logger.warn("generateNewPrompt", e);
+			log.warn("generateNewPrompt", e);
 		}
 		if (shouldRetry) {
 			return generateNewPromptTextCompletion(false); // if we fail to get a suggestion, try once more
 		}
-		logger.warn("generated empty suggestion");
+		log.warn("generated empty suggestion");
 		return Optional.empty();
 	}
 
@@ -194,12 +192,12 @@ public class OpenAIComponent implements IMeuralImageSource {
 	}
 
 	public void setStyle(String style) {
-		logger.info("setting style to " + style);
+		log.info("setting style to " + style);
 		this.style.set(style);
 	}
 
 	public void setQuality(String quality) {
-		logger.info("setting quality to " + quality);
+		log.info("setting quality to " + quality);
 		this.quality.set(quality);
 	}
 

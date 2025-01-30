@@ -9,23 +9,21 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.htmlunit.WebClient;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlDivision;
 import org.htmlunit.html.HtmlPage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 /**
  * Scrape content from James Webb Space Telescope site and display new content as it's published.
  */
+@Slf4j
 @Component
 public class JWSTComponent implements IMeuralImageSource {
-	private static final Logger logger = LoggerFactory.getLogger(JWSTComponent.class);
-
 	private final FilePersistentIndex lastFetchedImage = new FilePersistentIndex("jwsti");
 
 	private final FilePersistentIndex currentPage = new FilePersistentIndex("jwsti_page");
@@ -69,7 +67,7 @@ public class JWSTComponent implements IMeuralImageSource {
 						&& Float.parseFloat(text.substring(text.lastIndexOf("(") + 1, text.lastIndexOf("mb") - 1))
 								< 100);
 		if (!isSizeAcceptable) {
-			logger.warn("file too large for display, " + text);
+			log.warn("file too large for display, " + text);
 		}
 		return isSizeAcceptable;
 	}
@@ -90,7 +88,7 @@ public class JWSTComponent implements IMeuralImageSource {
 								new URL("https:" + anchor.getHrefAttribute()),
 								albumToSaveTo);
 					} catch (MalformedURLException e) {
-						logger.warn("findHighResLink", e);
+						log.warn("findHighResLink", e);
 					}
 					return null;
 				});
@@ -118,7 +116,7 @@ public class JWSTComponent implements IMeuralImageSource {
 			if ((images.isEmpty() && currentPage.get() != 1) // prevent looping
 					|| images.size() <= lastFetchedImage.get()) {
 				if (images.isEmpty()) {
-					logger.warn("can't find images on page: " + currentPage.get() + " index:" + lastFetchedImage);
+					log.warn("can't find images on page: " + currentPage.get() + " index:" + lastFetchedImage);
 				}
 				currentPage.set(1);
 				lastFetchedImage.set(0);
@@ -126,22 +124,22 @@ public class JWSTComponent implements IMeuralImageSource {
 				return;
 			}
 			String content = images.get(lastFetchedImage.get()).getTextContent().trim();
-			logger.info(
+			log.info(
 					"Fetched JWST content: \"" + content + "\" index:" + getFetchedImageIndex() + " page:" + getPage());
 			if (shouldSkipLink(content)) {
-				logger.info("Not showing " + content + ", matches skip keyword");
+				log.info("Not showing " + content + ", matches skip keyword");
 				getItem(increasing ? 1 : -1);
 				return;
 			}
 			List<HtmlAnchor> link = images.get(lastFetchedImage.get()).getByXPath(".//a");
 			if (link.isEmpty()) {
-				logger.warn("can't find link for content");
+				log.warn("can't find link for content");
 				return;
 			}
 			page = client.getPage(kJWSTUrl + link.get(0).getHrefAttribute());
 			List<HtmlAnchor> downloadLinks = page.getByXPath("//a");
 			if (downloadLinks.isEmpty()) {
-				logger.warn("can't find download links for "
+				log.warn("can't find download links for "
 						+ kJWSTUrl
 						+ link.get(0).getHrefAttribute());
 				return;
@@ -152,7 +150,7 @@ public class JWSTComponent implements IMeuralImageSource {
 							+ link.get(0).getHrefAttribute()
 							+ "\""));
 		} catch (IOException e) {
-			logger.warn("JWSTComponent", e);
+			log.warn("JWSTComponent", e);
 		}
 	}
 
