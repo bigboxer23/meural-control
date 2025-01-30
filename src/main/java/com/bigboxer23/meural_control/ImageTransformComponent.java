@@ -4,8 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,10 +12,9 @@ import org.springframework.stereotype.Component;
  * Component to apply command against an image prior to display. Useful for things like cropping or
  * adjusting image in some way via imageMagick or similar
  */
+@Slf4j
 @Component
 public class ImageTransformComponent {
-	private static final Logger logger = LoggerFactory.getLogger(ImageTransformComponent.class);
-
 	@Value("${transform-preview-commmand}")
 	private String previewCommand;
 
@@ -49,14 +47,14 @@ public class ImageTransformComponent {
 				while ((line = reader.readLine()) != null) {
 					out.append(line).append("\n");
 				}
-				logger.info("command output: " + out);
+				log.info("command output: " + out);
 			}
 			int exitCode = process.waitFor();
 			if (exitCode != 0) {
 				throw new IOException("error exit status from command: " + exitCode);
 			}
 		} catch (IOException | InterruptedException e) {
-			logger.warn("error running command", e);
+			log.warn("error running command", e);
 		}
 		return tmpFile.exists() ? tmpFile : file;
 	}

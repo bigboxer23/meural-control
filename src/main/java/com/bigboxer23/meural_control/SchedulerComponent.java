@@ -7,16 +7,14 @@ import com.bigboxer23.utils.command.Command;
 import com.bigboxer23.utils.file.FilePersistentIndex;
 import java.io.IOException;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /** Component to schedule changing the Meural's display */
+@Slf4j
 @Component
 public class SchedulerComponent {
-	private static final Logger logger = LoggerFactory.getLogger(SchedulerComponent.class);
-
 	private final GooglePhotosComponent gPhotosAPI;
 
 	private final OpenAIComponent openAIAPI;
@@ -50,7 +48,7 @@ public class SchedulerComponent {
 	private MeuralResponse doAction(Command<Optional<SourceItem>> command) throws IOException {
 		MeuralStatusResponse response = api.isAsleep();
 		if (response.isResponse()) {
-			logger.info("Meural is asleep, not doing anything");
+			log.info("Meural is asleep, not doing anything");
 			return response;
 		}
 		return command.execute()
@@ -62,7 +60,7 @@ public class SchedulerComponent {
 						url.setCleanupTempFile(true);
 						return api.changePicture(url);
 					} catch (IOException e) {
-						logger.warn("doAction: resetting api", e);
+						log.warn("doAction: resetting api", e);
 						api.reset();
 						return new MeuralResponse();
 					}

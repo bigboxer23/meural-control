@@ -22,9 +22,8 @@ import java.io.RandomAccessFile;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -32,10 +31,9 @@ import org.springframework.stereotype.Component;
  * Component to interface with Google Photos so content can be pushed direct (and live from cloud)
  * to the Meural device without needing to depend on Meural services.
  */
+@Slf4j
 @Component
 public class GooglePhotosComponent implements IMeuralImageSource {
-	private static final Logger logger = LoggerFactory.getLogger(GooglePhotosComponent.class);
-
 	@Value("${gPhotos-albumTitle}")
 	private String albumTitle;
 
@@ -73,7 +71,7 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 				for (int ai = 0; items.hasNext(); ai++) {
 					MediaItem item = items.next();
 					if (ai == currentItem.get()) {
-						logger.info("returning item " + currentItem.get() + " from album " + albumTitle);
+						log.info("returning item " + currentItem.get() + " from album " + albumTitle);
 						return Optional.of(
 								new SourceItem(item.getFilename(), new URL(item.getBaseUrl() + "=w10000-h10000")));
 					}
@@ -82,7 +80,7 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 				return jumpToItem(1);
 			}
 		} catch (IOException | GeneralSecurityException theE) {
-			logger.warn("nextItem:", theE);
+			log.warn("nextItem:", theE);
 		}
 		return Optional.empty();
 	}
@@ -102,7 +100,7 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 
 	protected void removeItemFromAlbum(String albumName, MediaItem item) {
 
-		logger.info("removing item from google photos album: \"" + item.getFilename() + "\"");
+		log.info("removing item from google photos album: \"" + item.getFilename() + "\"");
 		try {
 			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder()
 					.setCredentialsProvider(credentialProviderComponent.getCredentialProvider())
@@ -113,12 +111,12 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 						Collections.singletonList(item.getId()));
 			}
 		} catch (IOException | GeneralSecurityException | ApiException theE) {
-			logger.warn("removeItemFromAlbum:", theE);
+			log.warn("removeItemFromAlbum:", theE);
 		}
 	}
 
 	public NewMediaItemResult uploadItemToAlbum(SourceItem item) {
-		logger.info("uploading item to google photos album: \"" + item.getName() + "\"");
+		log.info("uploading item to google photos album: \"" + item.getName() + "\"");
 		try {
 			PhotosLibrarySettings settings = PhotosLibrarySettings.newBuilder()
 					.setCredentialsProvider(credentialProviderComponent.getCredentialProvider())
@@ -132,11 +130,11 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 				UploadMediaItemResponse response = photosLibraryClient.uploadMediaItem(request);
 				if (response.getError().isPresent()) {
 					UploadMediaItemResponse.Error error = response.getError().get();
-					logger.warn("uploadUrlToAlbum error", error.getCause());
+					log.warn("uploadUrlToAlbum error", error.getCause());
 					return null;
 				}
 				if (response.getUploadToken().isEmpty()) {
-					logger.warn("uploadUrlToAlbum no upload token exists");
+					log.warn("uploadUrlToAlbum no upload token exists");
 					return null;
 				}
 				String uploadToken = response.getUploadToken().get();
@@ -148,13 +146,13 @@ public class GooglePhotosComponent implements IMeuralImageSource {
 				for (NewMediaItemResult itemsResponse : createItemsResponse.getNewMediaItemResultsList()) {
 					Status status = itemsResponse.getStatus();
 					if (status.getCode() != Code.OK_VALUE) {
-						logger.warn("error creating media item: " + status.getCode() + " " + status.getMessage());
+						log.warn("error creating media item: " + status.getCode() + " " + status.getMessage());
 					}
 					return itemsResponse;
 				}
 			}
 		} catch (IOException | GeneralSecurityException | ApiException theE) {
-			logger.warn("uploadUrlToAlbum:", theE);
+			log.warn("uploadUrlToAlbum:", theE);
 		}
 		return null;
 	}
