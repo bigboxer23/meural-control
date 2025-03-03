@@ -110,8 +110,10 @@ public class MeuralComponent {
 
 	private void addPlaylistToDevice(String deviceId, String playlistId) throws IOException {
 		log.info("Adding playlist to Meural " + deviceId + ":" + playlistId);
-		RetryingCommand.execute(
-				() -> {
+		RetryingCommand.builder()
+				.identifier("add playlist" + playlistId)
+				.failureCommand(resetCommand())
+				.buildAndExecute(() -> {
 					try (Response response = OkHttpUtil.postSynchronous(
 							apiUrl + "devices/" + deviceId + "/galleries/" + playlistId, null, getAuthCallback())) {
 						if (!response.isSuccessful()) {
@@ -120,8 +122,7 @@ public class MeuralComponent {
 						}
 					}
 					return null;
-				},
-				"add playlist" + playlistId);
+				});
 	}
 
 	private void deleteItemsFromPlaylist(MeuralPlaylist playlist) throws IOException {
@@ -133,8 +134,10 @@ public class MeuralComponent {
 
 	private void deleteItem(Integer itemId) throws IOException {
 		log.info("deleting item: " + itemId);
-		RetryingCommand.execute(
-				() -> {
+		RetryingCommand.builder()
+				.identifier("delete item" + itemId)
+				.failureCommand(resetCommand())
+				.buildAndExecute(() -> {
 					try (Response response =
 							OkHttpUtil.deleteSynchronous(apiUrl + "items/" + itemId, getAuthCallback())) {
 						if (!response.isSuccessful()) {
@@ -143,14 +146,15 @@ public class MeuralComponent {
 						}
 					}
 					return null;
-				},
-				"delete item" + itemId);
+				});
 	}
 
 	private void addItemToPlaylist(String playlistId, String itemId) throws IOException {
 		log.info("adding item to playlist " + playlistId + ":" + itemId);
-		RetryingCommand.execute(
-				() -> {
+		RetryingCommand.builder()
+				.identifier("add item" + itemId)
+				.failureCommand(resetCommand())
+				.buildAndExecute(() -> {
 					try (Response response = OkHttpUtil.postSynchronous(
 							apiUrl + "galleries/" + playlistId + "/items/" + itemId, null, getAuthCallback())) {
 						if (!response.isSuccessful()) {
@@ -159,8 +163,7 @@ public class MeuralComponent {
 						}
 					}
 					return null;
-				},
-				"add item" + itemId);
+				});
 	}
 
 	private String getMeuralName(SourceItem sourceItem) {
@@ -201,8 +204,10 @@ public class MeuralComponent {
 
 	protected MeuralPlaylist getOrCreatePlaylist() throws IOException {
 		log.info("get playlist info for \"" + playlistName + "\"");
-		return RetryingCommand.execute(
-				() -> {
+		return RetryingCommand.builder()
+				.identifier("getOrCreatePlaylist ")
+				.failureCommand(resetCommand())
+				.buildAndExecute(() -> {
 					try (Response response =
 							OkHttpUtil.getSynchronous(apiUrl + "user/galleries?count=10&page=1", getAuthCallback())) {
 						MeuralPlaylists meuralPlaylists = OkHttpUtil.getNonEmptyBody(response, MeuralPlaylists.class);
@@ -224,19 +229,21 @@ public class MeuralComponent {
 									}
 								});
 						if (playlist == null) {
-							throw new IOException("cannot get playlist"); // Can't throw any exception from
+							throw new IOException("cannot get playlist"); // Can't throw any exception
+							// from
 							// orElseGet directly
 						}
 						return playlist;
 					}
-				},
-				"getOrCreatePlaylist ");
+				});
 	}
 
 	protected MeuralPlaylist createPlaylist(String name) throws IOException {
 		log.info("Creating playlist for " + name);
-		return RetryingCommand.execute(
-				() -> {
+		return RetryingCommand.builder()
+				.identifier("createPlaylist " + name)
+				.failureCommand(resetCommand())
+				.buildAndExecute(() -> {
 					try (Response response = OkHttpUtil.postSynchronous(
 							apiUrl + "galleries",
 							new FormBody.Builder()
@@ -252,14 +259,15 @@ public class MeuralComponent {
 						}
 						return playlistResponse.getData();
 					}
-				},
-				"createPlaylist " + name);
+				});
 	}
 
 	protected void deletePlaylist(String playlistId) throws IOException {
 		log.info("deleting playlist for " + playlistId);
-		RetryingCommand.execute(
-				() -> {
+		RetryingCommand.builder()
+				.identifier("delete playlist" + playlistId)
+				.failureCommand(resetCommand())
+				.buildAndExecute(() -> {
 					try (Response response =
 							OkHttpUtil.deleteSynchronous(apiUrl + "galleries/" + playlistId, getAuthCallback())) {
 						if (!response.isSuccessful()) {
@@ -271,8 +279,7 @@ public class MeuralComponent {
 						}
 					}
 					return null;
-				},
-				"delete playlist" + playlistId);
+				});
 	}
 
 	private String getDeviceIP() throws IOException {
@@ -297,6 +304,13 @@ public class MeuralComponent {
 		log.warn("resetting api");
 		token = null;
 		meuralDevice = null;
+	}
+
+	private Command<Void> resetCommand() {
+		return () -> {
+			reset();
+			return null;
+		};
 	}
 
 	private MeuralStringResponse executeAfterFetchCommand(SourceItem item, Command<MeuralStringResponse> command)
@@ -365,8 +379,10 @@ public class MeuralComponent {
 		}
 		File file = tmpFile;
 		log.info("previewing directly on meural \"" + item.getName() + "\"");
-		return RetryingCommand.execute(
-				() -> {
+		return RetryingCommand.builder()
+				.identifier("changePictureWithPreview")
+				.failureCommand(resetCommand())
+				.buildAndExecute(() -> {
 					try (Response response = OkHttpUtil.postSynchronous(
 							getDeviceURL() + "/remote/postcard",
 							new MultipartBody.Builder()
@@ -376,8 +392,7 @@ public class MeuralComponent {
 							null)) {
 						return OkHttpUtil.getNonEmptyBody(response, MeuralStringResponse.class);
 					}
-				},
-				"changePictureWithPreview");
+				});
 	}
 
 	/**
