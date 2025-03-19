@@ -4,6 +4,7 @@ import com.bigboxer23.meural_control.data.*;
 import com.bigboxer23.meural_control.google.GooglePhotosComponent;
 import com.bigboxer23.utils.command.Command;
 import com.bigboxer23.utils.command.RetryingCommand;
+import com.bigboxer23.utils.command.VoidCommand;
 import com.bigboxer23.utils.http.OkHttpUtil;
 import com.bigboxer23.utils.http.RequestBuilderCallback;
 import com.squareup.moshi.JsonEncodingException;
@@ -306,10 +307,9 @@ public class MeuralComponent {
 		meuralDevice = null;
 	}
 
-	private Command<Void> resetCommand() {
+	private VoidCommand resetCommand() {
 		return () -> {
 			reset();
-			return null;
 		};
 	}
 
