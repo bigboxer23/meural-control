@@ -1,0 +1,19 @@
+name: Enable auto-merge for Dependabot PRs
+
+on:
+  pull_request:
+    types: [opened, labeled]
+
+jobs:
+  enable-automerge:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+    - name: Enable auto-merge for Dependabot PR
+      uses: peter-evans/enable-pull-request-automerge@v3
+      with:
+        pull-request-number: ${{ github.event.pull_request.number }}
+        merge-method: squash  # or 'merge' or 'rebase'
