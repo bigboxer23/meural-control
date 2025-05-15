@@ -56,8 +56,8 @@ public class MeuralController {
 				servletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
 			}
 			return (T) response;
-		} catch (IOException theE) {
-			log.warn("handleResponse", theE);
+		} catch (IOException e) {
+			log.warn("handleResponse", e);
 			api.reset();
 			servletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
 			return (T) new MeuralResponse();
