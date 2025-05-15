@@ -15,6 +15,8 @@ import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.io.FileUtils;
@@ -22,12 +24,20 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthFlowType;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.InitiateAuthRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.InitiateAuthResponse;
 
 /** */
 @Slf4j
 @Component
 public class MeuralComponent {
 	private static final String apiUrl = "https://api.meural.com/v0/";
+
+	private static final String CLIENT_ID = "487bd4kvb1fnop6mbgk8gu5ibf";
 
 	@Value("${meural-account}")
 	private String username;
@@ -56,16 +66,23 @@ public class MeuralComponent {
 
 	protected String getToken() {
 		if (token == null) {
-			log.info("fetching service meural token");
-			try (Response response = OkHttpUtil.postSynchronous(
-					apiUrl + "authenticate",
-					new FormBody.Builder()
-							.add("username", username)
-							.add("password", password)
-							.build(),
-					null)) {
-				token = OkHttpUtil.getNonEmptyBody(response, Token.class).getToken();
-			} catch (IOException e) {
+			try (CognitoIdentityProviderClient client = CognitoIdentityProviderClient.builder()
+					.region(Region.EU_WEST_1)
+					.credentialsProvider(DefaultCredentialsProvider.create())
+					.build()) {
+				Map<String, String> authParams = new HashMap<>();
+				authParams.put("USERNAME", username);
+				authParams.put("PASSWORD", password);
+				InitiateAuthRequest authRequest = InitiateAuthRequest.builder()
+						.clientId(CLIENT_ID)
+						.authFlow(AuthFlowType.USER_PASSWORD_AUTH)
+						.authParameters(authParams)
+						.build();
+				InitiateAuthResponse response = client.initiateAuth(authRequest);
+				if (response.authenticationResult() != null) {
+					return response.authenticationResult().accessToken();
+				}
+			} catch (Exception e) {
 				log.error("getToken", e);
 			}
 		}
