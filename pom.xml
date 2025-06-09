@@ -27,14 +27,14 @@
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>bom</artifactId>
-        <version>2.31.54</version>
+        <version>2.31.59</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.13.0</version>
+        <version>5.13.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>bom</artifactId>
-      <version>2.31.54</version>
+      <version>2.31.59</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -117,7 +117,7 @@
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
-      <version>1.36.0</version>
+      <version>1.37.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.oauth-client</groupId>
@@ -137,7 +137,7 @@
     <dependency>
       <groupId>org.htmlunit</groupId>
       <artifactId>htmlunit</artifactId>
-      <version>4.12.0</version>
+      <version>4.13.0</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
