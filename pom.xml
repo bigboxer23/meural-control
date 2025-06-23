@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.0</version>
+    <version>3.5.3</version>
     <relativePath/>
     <!-- lookup parent from repository -->
   </parent>
@@ -27,7 +27,7 @@
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>bom</artifactId>
-        <version>2.31.63</version>
+        <version>2.31.68</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>bom</artifactId>
-      <version>2.31.63</version>
+      <version>2.31.68</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -117,7 +117,7 @@
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
-      <version>1.37.0</version>
+      <version>1.37.1</version>
     </dependency>
     <dependency>
       <groupId>com.google.oauth-client</groupId>
