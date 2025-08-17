@@ -49,7 +49,8 @@ public class MeuralController {
 		this.gPhotosAPI = gPhotosAPI;
 	}
 
-	private <T extends MeuralResponse> T handleResponse(HttpServletResponse servletResponse, Command<T> command) {
+	private <T extends MeuralResponse> T handleResponse(
+			HttpServletResponse servletResponse, Command<T> command, Class<T> responseType) {
 		try {
 			MeuralResponse response = command.execute();
 			if (!response.isSuccessful()) {
@@ -57,9 +58,19 @@ public class MeuralController {
 			}
 			return (T) response;
 		} catch (IOException e) {
-			log.warn("handleResponse", e);
+			log.warn("Device unreachable - IOException in handleResponse", e);
 			api.reset();
 			servletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+			return createErrorResponse(responseType);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T extends MeuralResponse> T createErrorResponse(Class<T> responseType) {
+		try {
+			return responseType.getDeclaredConstructor().newInstance();
+		} catch (Exception ex) {
+			log.error("Failed to create error response of type: " + responseType.getSimpleName(), ex);
 			return (T) new MeuralResponse();
 		}
 	}
@@ -85,7 +96,10 @@ public class MeuralController {
 	})
 	public MeuralStringResponse displayContentFromUrl(String url, HttpServletResponse servletResponse) {
 		log.warn("change display to: " + url);
-		return handleResponse(servletResponse, () -> api.changePicture(new SourceItem(null, new URL(url))));
+		return handleResponse(
+				servletResponse,
+				() -> api.changePicture(new SourceItem(null, new URL(url))),
+				MeuralStringResponse.class);
 	}
 
 	@PostMapping(value = "/previewContentFromUrl", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -112,7 +126,10 @@ public class MeuralController {
 	})
 	public MeuralStringResponse previewContentFromUrl(String url, HttpServletResponse servletResponse) {
 		log.warn("previewing: " + url);
-		return handleResponse(servletResponse, () -> api.previewItem(new SourceItem(null, new URL(url)), true));
+		return handleResponse(
+				servletResponse,
+				() -> api.previewItem(new SourceItem(null, new URL(url)), true),
+				MeuralStringResponse.class);
 	}
 
 	@GetMapping(value = "/isAsleep", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -125,7 +142,7 @@ public class MeuralController {
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralStatusResponse isAsleep(HttpServletResponse servletResponse) {
-		return handleResponse(servletResponse, api::isAsleep);
+		return handleResponse(servletResponse, api::isAsleep, MeuralStatusResponse.class);
 	}
 
 	@PostMapping(value = "/sleep", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -137,7 +154,7 @@ public class MeuralController {
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralStringResponse sleep(HttpServletResponse servletResponse) {
-		return handleResponse(servletResponse, api::sleep);
+		return handleResponse(servletResponse, api::sleep, MeuralStringResponse.class);
 	}
 
 	@PostMapping(value = "/wakeup", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -149,7 +166,7 @@ public class MeuralController {
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralStringResponse wakeup(HttpServletResponse servletResponse) {
-		return handleResponse(servletResponse, api::wakeup);
+		return handleResponse(servletResponse, api::wakeup, MeuralStringResponse.class);
 	}
 
 	@PostMapping(value = "/showInfo", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -161,7 +178,7 @@ public class MeuralController {
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralStringResponse showInfo(HttpServletResponse servletResponse) {
-		return handleResponse(servletResponse, api::up);
+		return handleResponse(servletResponse, api::up, MeuralStringResponse.class);
 	}
 
 	@PostMapping(value = "/hideInfo", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -173,7 +190,7 @@ public class MeuralController {
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralStringResponse hideInfo(HttpServletResponse servletResponse) {
-		return handleResponse(servletResponse, api::down);
+		return handleResponse(servletResponse, api::down, MeuralStringResponse.class);
 	}
 
 	@PostMapping(value = "/nextPicture", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -185,7 +202,7 @@ public class MeuralController {
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralResponse nextPicture(HttpServletResponse servletResponse) {
-		return handleResponse(servletResponse, scheduler::nextItem);
+		return handleResponse(servletResponse, scheduler::nextItem, MeuralResponse.class);
 	}
 
 	@PostMapping(value = "/prevPicture", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -197,7 +214,7 @@ public class MeuralController {
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralResponse prevPicture(HttpServletResponse servletResponse) {
-		return handleResponse(servletResponse, scheduler::prevItem);
+		return handleResponse(servletResponse, scheduler::prevItem, MeuralResponse.class);
 	}
 
 	@PostMapping(value = "/updateOpenAIPrompt", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -218,7 +235,7 @@ public class MeuralController {
 	})
 	public MeuralResponse updateOpenAIPrompt(String prompt, HttpServletResponse servletResponse) {
 		openAIComponent.updatePrompt(prompt);
-		return handleResponse(servletResponse, scheduler::nextItem);
+		return handleResponse(servletResponse, scheduler::nextItem, MeuralResponse.class);
 	}
 
 	@GetMapping(value = "/getOpenAIPrompt", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -230,12 +247,15 @@ public class MeuralController {
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralStringResponse getOpenAIPrompt(HttpServletResponse servletResponse) {
-		return handleResponse(servletResponse, () -> {
-			MeuralStringResponse response = new MeuralStringResponse();
-			response.setStatus("pass");
-			response.setResponse(openAIComponent.getPrompt().orElse(""));
-			return response;
-		});
+		return handleResponse(
+				servletResponse,
+				() -> {
+					MeuralStringResponse response = new MeuralStringResponse();
+					response.setStatus("pass");
+					response.setResponse(openAIComponent.getPrompt().orElse(""));
+					return response;
+				},
+				MeuralStringResponse.class);
 	}
 
 	@GetMapping(value = "/getOpenAIInformation", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -336,7 +356,7 @@ public class MeuralController {
 	})
 	public MeuralResponse changeSource(int source, HttpServletResponse servletResponse) {
 		scheduler.changeSource(source);
-		return handleResponse(servletResponse, scheduler::nextItem);
+		return handleResponse(servletResponse, scheduler::nextItem, MeuralResponse.class);
 	}
 
 	@GetMapping(value = "/getCurrentSource", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -350,6 +370,6 @@ public class MeuralController {
 		@ApiResponse(responseCode = HttpURLConnection.HTTP_OK + "", description = "success")
 	})
 	public MeuralStringResponse getCurrentSource(HttpServletResponse servletResponse) {
-		return handleResponse(servletResponse, scheduler::getSource);
+		return handleResponse(servletResponse, scheduler::getSource, MeuralStringResponse.class);
 	}
 }
