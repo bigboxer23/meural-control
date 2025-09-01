@@ -27,7 +27,7 @@
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>bom</artifactId>
-        <version>2.32.29</version>
+        <version>2.33.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>bom</artifactId>
-      <version>2.32.29</version>
+      <version>2.33.0</version>
       <type>pom</type>
       <scope>compile</scope>
     </dependency>
@@ -77,7 +77,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-kotlin</artifactId>
-      <version>2.19.2</version>
+      <version>2.20.0</version>
     </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
@@ -137,7 +137,7 @@
     <dependency>
       <groupId>org.htmlunit</groupId>
       <artifactId>htmlunit</artifactId>
-      <version>4.15.0</version>
+      <version>4.16.0</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
