@@ -4,22 +4,20 @@ import com.bigboxer23.meural_control.IMeuralImageSource;
 import com.bigboxer23.meural_control.data.SourceItem;
 import com.bigboxer23.utils.file.FilePersistentIndex;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.htmlunit.WebClient;
 import org.htmlunit.html.HtmlAnchor;
-import org.htmlunit.html.HtmlDivision;
 import org.htmlunit.html.HtmlPage;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 /**
- * Scrape content from James Webb Space Telescope site and display new content as it's published.
+ * Scrape content from James Webb Space Telescope Flickr album and display new content as it's
+ * published.
  */
 @Slf4j
 @Component
@@ -34,7 +32,10 @@ public class JWSTComponent implements IMeuralImageSource {
 
 	private boolean increasing = true;
 
-	private static final String kJWSTUrl = "https://webbtelescope.org";
+	private static final String kFlickrAlbumUrl =
+			"https://www.flickr.com/photos/nasawebbtelescope/albums/72177720323168468/";
+	private static final String kFlickrSizesUrl = "https://www.flickr.com/photos/nasawebbtelescope/%s/sizes/o/";
+	private static final String kFlickrBaseUrl = "https://www.flickr.com";
 
 	private static final List<String> skipKeywords = new ArrayList<>() {
 		{
@@ -61,39 +62,6 @@ public class JWSTComponent implements IMeuralImageSource {
 		fetchContent();
 	}
 
-	private boolean isFileSizeAcceptable(String text) {
-		boolean isSizeAcceptable = text.contains("kb")
-				|| (text.contains("mb")
-						&& Float.parseFloat(text.substring(text.lastIndexOf("(") + 1, text.lastIndexOf("mb") - 1))
-								< 100);
-		if (!isSizeAcceptable) {
-			log.warn("file too large for display, " + text);
-		}
-		return isSizeAcceptable;
-	}
-
-	private Optional<SourceItem> findHighResLink(List<HtmlAnchor> anchors, String content) {
-		return anchors.stream()
-				.filter(anchor -> {
-					String text = anchor.getTextContent().toLowerCase();
-					return text.contains("full res")
-							&& (text.contains("png") || text.contains("jpg"))
-							&& isFileSizeAcceptable(text);
-				})
-				.findAny()
-				.map(anchor -> {
-					try {
-						return new SourceItem(
-								content + "." + FilenameUtils.getExtension(anchor.getHrefAttribute()),
-								new URL("https:" + anchor.getHrefAttribute()),
-								albumToSaveTo);
-					} catch (MalformedURLException e) {
-						log.warn("findHighResLink", e);
-					}
-					return null;
-				});
-	}
-
 	private void fetchContent() {
 		try (WebClient client = new WebClient()) {
 			client.getOptions().setCssEnabled(false);
@@ -109,60 +77,52 @@ public class JWSTComponent implements IMeuralImageSource {
 				lastFetchedImage.set(0);
 				currentPage.increment();
 			}
-			HtmlPage page = client.getPage(
-					kJWSTUrl + "/resource-gallery/images?itemsPerPage=" + PAGE_SIZE + "&page=" + currentPage.get());
-			List<HtmlDivision> images =
-					page.getDocumentElement().getByXPath("//div[contains(@class,'ad-research-box card')]");
-			if (images.isEmpty()) {
-				log.warn("can't find images on page: " + currentPage.get() + " index:" + lastFetchedImage);
-				if (currentPage.get() != 1) {
-					currentPage.set(1);
-					lastFetchedImage.set(0);
-					fetchContent();
-					return;
-				} else {
-					log.error("No images found on page 1, aborting to prevent infinite recursion");
-					return;
+
+			String flickrAlbumUrl = kFlickrAlbumUrl + "page" + currentPage.get() + "/";
+			HtmlPage page = client.getPage(flickrAlbumUrl);
+
+			List<HtmlAnchor> photoLinks = extractPhotoLinksFromFlickrAlbum(page);
+
+			if ((photoLinks.isEmpty() && currentPage.get() != 1) // prevent looping
+					|| photoLinks.size() <= lastFetchedImage.get()) {
+				if (photoLinks.isEmpty()) {
+					log.warn("can't find images on page: " + currentPage.get() + " index:" + lastFetchedImage);
 				}
-			}
-			if (images.size() <= lastFetchedImage.get()) {
-				log.warn("Not enough images on page "
-						+ currentPage.get()
-						+ ", found "
-						+ images.size()
-						+ " but index is "
-						+ lastFetchedImage.get());
 				currentPage.set(1);
 				lastFetchedImage.set(0);
 				fetchContent();
 				return;
 			}
-			String content = images.get(lastFetchedImage.get()).getTextContent().trim();
-			log.info(
-					"Fetched JWST content: \"" + content + "\" index:" + getFetchedImageIndex() + " page:" + getPage());
-			if (shouldSkipLink(content)) {
-				log.info("Not showing " + content + ", matches skip keyword");
+
+			HtmlAnchor photoLink = photoLinks.get(lastFetchedImage.get());
+			String photoId = extractPhotoIdFromLink(photoLink.getHrefAttribute());
+			String photoTitle = photoLink.getAttribute("title");
+
+			if (photoTitle == null || photoTitle.trim().isEmpty()) {
+				photoTitle = "JWST Image " + photoId;
+			}
+
+			log.info("Fetched JWST content: \""
+					+ photoTitle
+					+ "\" index:"
+					+ getFetchedImageIndex()
+					+ " page:"
+					+ getPage());
+
+			if (shouldSkipLink(photoTitle)) {
+				log.info("Not showing " + photoTitle + ", matches skip keyword");
 				getItem(increasing ? 1 : -1);
 				return;
 			}
-			List<HtmlAnchor> link = images.get(lastFetchedImage.get()).getByXPath(".//a");
-			if (link.isEmpty()) {
-				log.warn("can't find link for content");
+
+			Optional<URL> downloadUrl = getFlickrDownloadUrl(client, photoId);
+			if (downloadUrl.isEmpty()) {
+				log.warn("can't find download link for photo ID: " + photoId);
 				return;
 			}
-			page = client.getPage(kJWSTUrl + link.get(0).getHrefAttribute());
-			List<HtmlAnchor> downloadLinks = page.getByXPath("//a");
-			if (downloadLinks.isEmpty()) {
-				log.warn("can't find download links for "
-						+ kJWSTUrl
-						+ link.get(0).getHrefAttribute());
-				return;
-			}
-			newestContent = findHighResLink(downloadLinks, content)
-					.orElseThrow(() -> new IOException("can't fetch image from: \""
-							+ kJWSTUrl
-							+ link.get(0).getHrefAttribute()
-							+ "\""));
+
+			newestContent = new SourceItem(photoTitle + ".jpg", downloadUrl.get(), albumToSaveTo);
+
 		} catch (IOException e) {
 			log.warn("JWSTComponent", e);
 		}
@@ -170,6 +130,65 @@ public class JWSTComponent implements IMeuralImageSource {
 
 	protected boolean shouldSkipLink(String link) {
 		return skipKeywords.stream().anyMatch(word -> link.toLowerCase().contains(word));
+	}
+
+	private List<HtmlAnchor> extractPhotoLinksFromFlickrAlbum(HtmlPage page) {
+		List<HtmlAnchor> photoLinks = page.getByXPath("//a[contains(@href, '/photos/nasawebbtelescope/')]");
+
+		return photoLinks.stream()
+				.filter(anchor -> anchor.getHrefAttribute().matches(".*/photos/nasawebbtelescope/\\d+/?.*"))
+				.toList();
+	}
+
+	private String extractPhotoIdFromLink(String href) {
+
+		String[] parts = href.split("/");
+		for (String part : parts) {
+			if (part.matches("\\d+")) {
+				return part;
+			}
+		}
+		throw new IllegalArgumentException("Could not extract photo ID from URL: " + href);
+	}
+
+	private Optional<URL> getFlickrDownloadUrl(WebClient client, String photoId) {
+		try {
+			String sizesUrl = String.format(kFlickrSizesUrl, photoId);
+			HtmlPage sizesPage = client.getPage(sizesUrl);
+
+			List<HtmlAnchor> downloadLinks = sizesPage.getByXPath("//a[contains(@href, 'photo_download.gne')]");
+
+			for (HtmlAnchor link : downloadLinks) {
+				String href = link.getHrefAttribute();
+				if (href.contains("size=o") && href.contains("id=" + photoId)) {
+					if (href.startsWith("/")) {
+						href = kFlickrBaseUrl + href;
+					} else if (!href.startsWith("http")) {
+						href = kFlickrBaseUrl + "/" + href;
+					}
+					return Optional.of(new URL(href));
+				}
+			}
+
+			List<HtmlAnchor> allLinks = sizesPage.getByXPath("//a");
+			for (HtmlAnchor link : allLinks) {
+				String linkText = link.getTextContent().toLowerCase();
+				String href = link.getHrefAttribute();
+				if ((linkText.contains("download") || linkText.contains("original")) && href.contains(photoId)) {
+					if (href.startsWith("/")) {
+						href = kFlickrBaseUrl + href;
+					} else if (!href.startsWith("http")) {
+						href = kFlickrBaseUrl + "/" + href;
+					}
+					return Optional.of(new URL(href));
+				}
+			}
+
+		} catch (IOException e) {
+			log.warn("Error fetching download URL for photo ID: " + photoId, e);
+		}
+
+		return Optional.empty();
 	}
 
 	@Override
