@@ -113,11 +113,25 @@ public class JWSTComponent implements IMeuralImageSource {
 					kJWSTUrl + "/resource-gallery/images?itemsPerPage=" + PAGE_SIZE + "&page=" + currentPage.get());
 			List<HtmlDivision> images =
 					page.getDocumentElement().getByXPath("//div[contains(@class,'ad-research-box card')]");
-			if ((images.isEmpty() && currentPage.get() != 1) // prevent looping
-					|| images.size() <= lastFetchedImage.get()) {
-				if (images.isEmpty()) {
-					log.warn("can't find images on page: " + currentPage.get() + " index:" + lastFetchedImage);
+			if (images.isEmpty()) {
+				log.warn("can't find images on page: " + currentPage.get() + " index:" + lastFetchedImage);
+				if (currentPage.get() != 1) {
+					currentPage.set(1);
+					lastFetchedImage.set(0);
+					fetchContent();
+					return;
+				} else {
+					log.error("No images found on page 1, aborting to prevent infinite recursion");
+					return;
 				}
+			}
+			if (images.size() <= lastFetchedImage.get()) {
+				log.warn("Not enough images on page "
+						+ currentPage.get()
+						+ ", found "
+						+ images.size()
+						+ " but index is "
+						+ lastFetchedImage.get());
 				currentPage.set(1);
 				lastFetchedImage.set(0);
 				fetchContent();
