@@ -160,7 +160,7 @@ public class JWSTComponent implements IMeuralImageSource {
 
 			for (HtmlAnchor link : downloadLinks) {
 				String href = link.getHrefAttribute();
-				if (href.contains("size=o") && href.contains("id=" + photoId)) {
+				if (href.contains("size=xl") && href.contains("id=" + photoId)) {
 					if (href.startsWith("/")) {
 						href = kFlickrBaseUrl + href;
 					} else if (!href.startsWith("http")) {
