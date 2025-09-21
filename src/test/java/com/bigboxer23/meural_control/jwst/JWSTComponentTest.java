@@ -1,6 +1,5 @@
 package com.bigboxer23.meural_control.jwst;
 
-import static com.bigboxer23.meural_control.jwst.JWSTComponent.PAGE_SIZE;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.bigboxer23.meural_control.data.SourceItem;
@@ -19,59 +18,33 @@ public class JWSTComponentTest {
 	private JWSTComponent component;
 
 	@Test
-	public void testPaging() {
-		component.setPage(1);
+	public void testImageFetching() {
 		component.setFetchedImageIndex(0);
 		Optional<SourceItem> item = component.nextItem();
-		component.setFetchedImageIndex(PAGE_SIZE - 1);
 		Optional<SourceItem> item2 = component.nextItem();
 		assertTrue(item.isPresent());
 		assertTrue(item2.isPresent());
-		assertEquals(2, component.getPage());
-		assertTrue(component.getFetchedImageIndex() < PAGE_SIZE);
 		assertNotEquals(item.get().getName(), item2.get().getName());
 	}
 
 	@Test
-	public void testLastPage() {
-		component.setPage(35);
-		component.setFetchedImageIndex(0);
-		Optional<SourceItem> item = component.nextItem();
-		assertTrue(item.isPresent());
-		assertEquals(1, component.getPage());
-	}
-
-	@Test
 	public void testNextItem() {
-		component.setPage(1);
 		component.setFetchedImageIndex(0);
 		assertTrue(component.nextItem().isPresent());
 		assertTrue(component.getFetchedImageIndex() > 0);
-		component.setFetchedImageIndex(PAGE_SIZE - 1);
-		assertTrue(component.nextItem().isPresent());
-		assertEquals(0, component.getFetchedImageIndex());
-		assertEquals(2, component.getPage());
 	}
 
 	@Test
 	public void testPreviousItem() {
-		component.setPage(1);
-		component.setFetchedImageIndex(0);
+		component.setFetchedImageIndex(10);
 		assertTrue(component.prevItem().isPresent());
-		assertTrue(10 < component.getFetchedImageIndex()); // Add some fluff here in case we've found
-		// some diagrams and skipped
-		component.setFetchedImageIndex(0);
-		component.setPage(3);
-		assertTrue(component.prevItem().isPresent());
-		assertTrue(10 < component.getFetchedImageIndex());
-		assertEquals(2, component.getPage());
+		assertTrue(component.getFetchedImageIndex() < 10);
 	}
 
 	@Test
 	public void testDiagramSkipping() {
-		component.setPage(1);
 		component.setFetchedImageIndex(0);
-		for (int i = 0; i < PAGE_SIZE; i++) {
+		for (int i = 0; i < 5; i++) {
 			Optional<SourceItem> item = component.nextItem();
 			assertTrue(item.isPresent());
 			assertFalse(component.shouldSkipLink(item.get().getName()));

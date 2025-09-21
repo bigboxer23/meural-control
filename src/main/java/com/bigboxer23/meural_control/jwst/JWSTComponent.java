@@ -24,10 +24,6 @@ import org.springframework.stereotype.Component;
 public class JWSTComponent implements IMeuralImageSource {
 	private final FilePersistentIndex lastFetchedImage = new FilePersistentIndex("jwsti");
 
-	private final FilePersistentIndex currentPage = new FilePersistentIndex("jwsti_page");
-
-	public static final int PAGE_SIZE = 15;
-
 	private SourceItem newestContent;
 
 	private boolean increasing = true;
@@ -53,9 +49,6 @@ public class JWSTComponent implements IMeuralImageSource {
 	public JWSTComponent(Environment env) {
 		// need to read here since we need this value before the constructor completes
 		albumToSaveTo = env.getProperty("jwst-save-album");
-		if (currentPage.get() == -1) {
-			currentPage.set(1);
-		}
 		if (lastFetchedImage.get() == -1) {
 			lastFetchedImage.set(0);
 		}
@@ -66,32 +59,20 @@ public class JWSTComponent implements IMeuralImageSource {
 		try (WebClient client = new WebClient()) {
 			client.getOptions().setCssEnabled(false);
 			client.getOptions().setJavaScriptEnabled(false);
-			if (lastFetchedImage.get() == -1) {
-				lastFetchedImage.set(PAGE_SIZE - 1);
-				currentPage.set(currentPage.get() - 1);
-			}
-			if (currentPage.get() <= 0) {
-				currentPage.set(1);
-			}
-			if (lastFetchedImage.get() >= PAGE_SIZE) {
-				lastFetchedImage.set(0);
-				currentPage.increment();
-			}
 
-			String flickrAlbumUrl = kFlickrAlbumUrl + "page" + currentPage.get() + "/";
-			HtmlPage page = client.getPage(flickrAlbumUrl);
-
+			HtmlPage page = client.getPage(kFlickrAlbumUrl);
 			List<HtmlAnchor> photoLinks = extractPhotoLinksFromFlickrAlbum(page);
 
-			if ((photoLinks.isEmpty() && currentPage.get() != 1) // prevent looping
-					|| photoLinks.size() <= lastFetchedImage.get()) {
-				if (photoLinks.isEmpty()) {
-					log.warn("can't find images on page: " + currentPage.get() + " index:" + lastFetchedImage);
-				}
-				currentPage.set(1);
-				lastFetchedImage.set(0);
-				fetchContent();
+			if (photoLinks.isEmpty()) {
+				log.warn("can't find images in album");
 				return;
+			}
+
+			if (lastFetchedImage.get() >= photoLinks.size()) {
+				lastFetchedImage.set(0);
+			}
+			if (lastFetchedImage.get() < 0) {
+				lastFetchedImage.set(photoLinks.size() - 1);
 			}
 
 			HtmlAnchor photoLink = photoLinks.get(lastFetchedImage.get());
@@ -102,12 +83,7 @@ public class JWSTComponent implements IMeuralImageSource {
 				photoTitle = "JWST Image " + photoId;
 			}
 
-			log.info("Fetched JWST content: \""
-					+ photoTitle
-					+ "\" index:"
-					+ getFetchedImageIndex()
-					+ " page:"
-					+ getPage());
+			log.info("Fetched JWST content: \"" + photoTitle + "\" index:" + getFetchedImageIndex());
 
 			if (shouldSkipLink(photoTitle)) {
 				log.info("Not showing " + photoTitle + ", matches skip keyword");
@@ -207,14 +183,6 @@ public class JWSTComponent implements IMeuralImageSource {
 		lastFetchedImage.set(lastFetchedImage.get() + page);
 		fetchContent();
 		return Optional.ofNullable(newestContent);
-	}
-
-	protected int getPage() {
-		return currentPage.get();
-	}
-
-	protected void setPage(int page) {
-		currentPage.set(page);
 	}
 
 	protected int getFetchedImageIndex() {
