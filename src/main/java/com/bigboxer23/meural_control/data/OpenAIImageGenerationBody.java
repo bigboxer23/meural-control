@@ -1,7 +1,7 @@
 package com.bigboxer23.meural_control.data;
 
+import com.squareup.moshi.Json;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 
 /** */
 @Data
@@ -10,18 +10,22 @@ public class OpenAIImageGenerationBody extends AbstractOpenAIBody {
 
 	private int n = 1;
 
-	private String size = "1024x1792";
+	private String size = "1024x1536";
 
-	private String model = "dall-e-3";
+	private String model = "gpt-image-1.5";
 
 	private String quality;
 
-	private String style;
+	@Json(name = "output_format")
+	private String outputFormat;
+
+	private String moderation;
 
 	public OpenAIImageGenerationBody(String prompt, String user, String style, String quality) {
 		super(user);
 		setPrompt(prompt);
-		setStyle(StringUtils.defaultIfBlank(style, "vivid"));
-		setQuality(StringUtils.defaultIfBlank(quality, "hd"));
+		setOutputFormat("jpeg");
+		setModeration("low");
+		setQuality("high");
 	}
 }
