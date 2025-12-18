@@ -6,7 +6,8 @@ import com.bigboxer23.utils.file.FilePersistedString;
 import com.bigboxer23.utils.http.OkHttpUtil;
 import com.squareup.moshi.Moshi;
 import java.io.IOException;
-import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -90,10 +91,11 @@ public class OpenAIComponent implements IMeuralImageSource {
 				OpenAIImageGenerationResponse openAIResponse =
 						OkHttpUtil.getNonEmptyBody(response, OpenAIImageGenerationResponse.class);
 				if (openAIResponse.getData().length > 0) {
-					return Optional.of(new SourceItem(
-							lastPrompt.get() + gCalendarComponent.getHolidayString() + ".png",
-							new URL(openAIResponse.getData()[0].getUrl()),
-							albumToSaveTo));
+					SourceItem item = new SourceItem(
+							lastPrompt.get() + gCalendarComponent.getHolidayString() + ".jpg", null, albumToSaveTo);
+					Path temp = Files.createTempFile("", ".jpg");
+					item.setTempFile(openAIResponse.getData()[0].toFile(temp.toString()));
+					return Optional.of(item);
 				}
 			} else {
 				resetPrompt(response.message(), response.code());
