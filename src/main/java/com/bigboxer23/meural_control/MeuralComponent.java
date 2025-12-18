@@ -1,7 +1,6 @@
 package com.bigboxer23.meural_control;
 
 import com.bigboxer23.meural_control.data.*;
-import com.bigboxer23.meural_control.google.GooglePhotosComponent;
 import com.bigboxer23.utils.command.Command;
 import com.bigboxer23.utils.command.RetryingCommand;
 import com.bigboxer23.utils.command.VoidCommand;
@@ -55,12 +54,12 @@ public class MeuralComponent {
 
 	private Device meuralDevice;
 
-	private final GooglePhotosComponent gPhotos;
+	private final S3UploadComponent s3Upload;
 
 	private final ImageTransformComponent transformComponent;
 
-	public MeuralComponent(GooglePhotosComponent gPhotos, ImageTransformComponent transform) {
-		this.gPhotos = gPhotos;
+	public MeuralComponent(S3UploadComponent s3Upload, ImageTransformComponent transform) {
+		this.s3Upload = s3Upload;
 		transformComponent = transform;
 	}
 
@@ -337,7 +336,7 @@ public class MeuralComponent {
 		} finally {
 			if (item.isCleanupTempFile()) {
 				if (item.getAlbumToSaveTo() != null && item.getAlbumToSaveTo().length() > 0) {
-					gPhotos.uploadItemToAlbum(item);
+					s3Upload.uploadItem(item);
 				}
 				log.info("removing temp file: \"" + item.getName() + "\"");
 				item.getTempFile().delete();
